@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="panel" id="journal-entry-form">
+  <h3>New Journal Entry</h3>
+  <form id="add-journal-entry" class="form-grid">
+    <label class="col-1">
+      Date
+      <input type="date" name="date" value="{{ today }}" required>
+    </label>
+
+    <label class="col-3">
+      Title 
+      <input type="text" name="title" placeholder="e.g., SPY volatility spike reflection">
+    </label>
+
+    <label class="full-width">
+      Notes
+      <textarea name="text" rows="6" placeholder="What went through your mind? Strategy thoughts, emotions, what you'd do differently..."></textarea>
+    </label>
+
+    <label class="col-2">
+      Tags <span class="hint" style="display:inline">(comma separated)</span>
+      <input type="text" name="tags" placeholder="e.g., SPY, earnings, high IV, tilt" id="tags-input">
+    </label>
+
+    <label class="col-2">
+      Linked Trade <span class="hint" style="display:inline">(today's closed trades)</span>
+      <select name="trade_id">
+        <option value="">-- None --</option>
+        {% for trade in closed_trades_today %}
+        <option value="{{ trade.id }}">{{ trade.symbol }} · {{ trade.option_type }} · {{ trade.num_options }} contracts · PnL: {{ trade.pnl | money }} (ID: {{ trade.id }})</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div id="tag-preview" class="tags-preview col-2"></div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Add Entry</button>
+    </div>
+  </form>
+</div>
+
+<div class="panel" id="journal-entries">
+  <h3>Past Entries</h3>
+  {% if journal_entries %}
+  <div class="entries-list">
+    {% for entry in journal_entries %}
+    <div class="entry-card">
+      <div class="entry-header">
+        <strong>{{ entry.date }}</strong>
+        {% if entry.title %}<span class="entry-title">{{ entry.title }}</span>{% endif %}
+        {% if entry.tags %}
+        <span class="entry-tags">
+          {% for tag in entry.tags.split(',') %}
+          <span class="tag-chip">{{ tag.strip() }}</span>
+          {% endfor %}
+        </span>
+        {% endif %}
+      </div>
+      <p class="entry-text">{{ entry.text }}</p>
+      {% if entry.trade_id %}
+      <div class="linked-trade">
+        <i class="fa-solid fa-link" style="font-size:0.8rem;"></i>
+        {{ entry.symbol }} {{ entry.option_type }} &nbsp;·&nbsp; {{ entry.num_options }} contracts &nbsp;·&nbsp;
+        PnL: <span class="{% if entry.pnl and entry.pnl > 0 %}positive{% elif entry.pnl and entry.pnl < 0 %}negative{% endif %}">{{ entry.pnl | money }}</span>
+        &nbsp;&middot;&nbsp; <span style="opacity:0.6">ID: {{ entry.trade_id }}</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No journal entries yet. Add your first reflection above.</p>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('add-journal-entry').onsubmit = async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    date: form.date.value,
+    title: form.title.value,
+    text: form.text.value,
+    tags: form.tags.value,
+    trade_id: form.trade_id.value || null
+  };
+  const btn = form.querySelector('[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  await fetch('/journal/entry', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify(data)
+  });
+  location.reload();
+};
+
+// Tag preview chips
+const tagsInput = document.getElementById('tags-input');
+const preview = document.getElementById('tag-preview');
+if (tagsInput && preview) {
+  tagsInput.addEventListener('input', function() {
+    const tags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+    preview.innerHTML = '';
+    tags.forEach(function(tag) {
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.textContent = tag;
+      preview.appendChild(chip);
+    });
+  });
+}
+</script>
+{% endblock %}

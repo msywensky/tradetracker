@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>Options Trade Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="bg-texture"></div>
+    <header class="site-header">
+    <div class="brand">
+      <div class="logo">OT</div>
+      <div>
+        <h1>Options Trade Tracker</h1>
+        <p>Clean monthly summaries.</p>
+      </div>
+    </div>
+    <nav>
+      <ul style="list-style: none; display: flex; margin: 0; padding: 0;">
+        <li><a href="{{ url_for('index') }}"><i class="fa-solid fa-right-left nav-icon"></i> Trades</a></li>
+        <li><a href="{{ url_for('journal_page') }}"><i class="fa-solid fa-book-open nav-icon"></i> Journal</a></li>
+        <li><a href="{{ url_for('accounts_page') }}"><i class="fa-solid fa-wallet nav-icon"></i> Accounts</a></li>
+        <li><a href="{{ url_for('month_summary', year=month_start.year if month_start else today.year, month=month_start.month if month_start else today.month) }}"><i class="fa-solid fa-calendar-days nav-icon"></i> Monthly</a></li>
+        <li><a href="{{ url_for('ytd_summary', year=today.year) }}"><i class="fa-solid fa-chart-line nav-icon"></i> YTD</a></li>
+        <li><a href="{{ url_for('analysis') }}"><i class="fa-solid fa-chart-column nav-icon"></i> Analysis</a></li>
+      </ul>
+      <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+    </nav>
+  </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+  <script>
+  function toggleTheme() {
+    document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? '' : 'dark');
+    localStorage.setItem('theme', document.documentElement.getAttribute('data-theme'));
+  }
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+</html>

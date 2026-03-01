@@ -1,0 +1,482 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel">
+  <div class="analysis-header">
+    <div>
+      <h2>Trading Analysis</h2>
+      <p>Interactive charts for your trading performance.</p>
+    </div>
+    <form method="get" class="analysis-filters" action="{{ url_for('analysis') }}">
+      <label>
+        Account
+        <select name="account" onchange="this.form.submit()">
+          <option value="ALL" {% if selected_account is none %}selected{% endif %}>ALL</option>
+          {% for account in accounts %}
+          <option value="{{ account.id }}" {% if selected_account == account.id %}selected{% endif %}>
+            {{ account.short_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        View
+        <select name="view" onchange="this.form.submit()">
+          <option value="month" {% if view_type == 'month' %}selected{% endif %}>Month</option>
+          <option value="ytd" {% if view_type == 'ytd' %}selected{% endif %}>YTD</option>
+        </select>
+      </label>
+      <div class="chart-config-wrap">
+        <button type="button" id="chart-config-button" class="btn-compact" aria-haspopup="true" aria-expanded="false" aria-controls="chart-config-popover" title="Configure charts">
+          <i class="fa-solid fa-gear btn-icon"></i>Configure
+        </button>
+        <div id="chart-config-popover" class="chart-config-popover is-hidden" role="dialog" aria-label="Configure analysis charts">
+          <p class="chart-config-title">Charts</p>
+          <p class="hint">Toggle charts and drag to reorder.</p>
+          <ul id="chart-config-list" class="chart-config-list"></ul>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div id="analysis-charts">
+{% if chart1_json %}
+<section class="panel chart-panel" data-chart-id="chart1" data-chart-label="Daily P&L Trend">
+  <div id="chart1"></div>
+</section>
+{% endif %}
+
+{% if chart2_json %}
+<section class="panel chart-panel" data-chart-id="chart2" data-chart-label="Win Percentage">
+  <div id="chart2"></div>
+</section>
+{% endif %}
+
+{% if chart3_json %}
+<section class="panel chart-panel" data-chart-id="chart3" data-chart-label="Monthly P&L Comparison">
+  <div id="chart3"></div>
+</section>
+{% endif %}
+
+{% if chart4_json %}
+<section class="panel chart-panel" data-chart-id="chart4" data-chart-label="Account Balance Trend">
+  <div id="chart4"></div>
+</section>
+{% endif %}
+
+{% if chart5_json %}
+<section class="panel chart-panel" data-chart-id="chart5" data-chart-label="Win % vs P&L Correlation">
+  {% if chart5_summary %}
+  <p class="hint">{{ chart5_summary }}</p>
+  {% endif %}
+  <div id="chart5"></div>
+</section>
+{% endif %}
+
+{% if chart6_json %}
+<section class="panel chart-panel" data-chart-id="chart6" data-chart-label="# Trades vs P&L Correlation">
+  {% if chart6_summary %}
+  <p class="hint">{{ chart6_summary }}</p>
+  {% endif %}
+  <div id="chart6"></div>
+</section>
+{% endif %}
+
+{% if chart7_json %}
+<section class="panel chart-panel" data-chart-id="chart7" data-chart-label="Avg Winner / Avg Loser vs P&L">
+  {% if chart7_summary %}
+  <p class="hint">{{ chart7_summary }}</p>
+  {% endif %}
+  <div id="chart7"></div>
+</section>
+{% endif %}
+
+{% if chart8_json %}
+<section class="panel chart-panel" data-chart-id="chart8" data-chart-label="Day of Week vs P&L">
+  <div id="chart8"></div>
+</section>
+{% endif %}
+</div>
+
+{% if not chart1_json and not chart2_json and not chart3_json and not chart4_json and not chart5_json and not chart6_json and not chart7_json and not chart8_json %}
+<section class="panel">
+  <p>No trading data available yet. Create some trades to see analysis.</p>
+</section>
+{% endif %}
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+  {% if chart1_json %}
+  var chart1_data = {{ chart1_json | safe }};
+  Plotly.newPlot('chart1', chart1_data.data, chart1_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart2_json %}
+  var chart2_data = {{ chart2_json | safe }};
+  Plotly.newPlot('chart2', chart2_data.data, chart2_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart3_json %}
+  var chart3_data = {{ chart3_json | safe }};
+  Plotly.newPlot('chart3', chart3_data.data, chart3_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart4_json %}
+  var chart4_data = {{ chart4_json | safe }};
+  Plotly.newPlot('chart4', chart4_data.data, chart4_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart5_json %}
+  var chart5_data = {{ chart5_json | safe }};
+  Plotly.newPlot('chart5', chart5_data.data, chart5_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart6_json %}
+  var chart6_data = {{ chart6_json | safe }};
+  Plotly.newPlot('chart6', chart6_data.data, chart6_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart7_json %}
+  var chart7_data = {{ chart7_json | safe }};
+  Plotly.newPlot('chart7', chart7_data.data, chart7_data.layout, {responsive: true});
+  {% endif %}
+
+  {% if chart8_json %}
+  var chart8_data = {{ chart8_json | safe }};
+  Plotly.newPlot('chart8', chart8_data.data, chart8_data.layout, {responsive: true});
+  {% endif %}
+
+  var serverChartPreferences = {{ chart_preferences | tojson }};
+
+  (function setupChartConfiguration() {
+    var button = document.getElementById("chart-config-button");
+    var popover = document.getElementById("chart-config-popover");
+    var list = document.getElementById("chart-config-list");
+    var container = document.getElementById("analysis-charts");
+
+    if (!button || !popover || !list || !container) {
+      return;
+    }
+
+    var allSections = Array.from(container.querySelectorAll(".chart-panel[data-chart-id]"));
+    if (!allSections.length) {
+      button.style.display = "none";
+      return;
+    }
+
+    var sectionById = {};
+    allSections.forEach(function (section) {
+      sectionById[section.getAttribute("data-chart-id")] = section;
+    });
+
+    var defaultOrder = allSections.map(function (section) {
+      return section.getAttribute("data-chart-id");
+    });
+
+    function loadPrefs() {
+      var parsed = (serverChartPreferences && typeof serverChartPreferences === "object")
+        ? serverChartPreferences
+        : {};
+
+      var storedOrder = Array.isArray(parsed.order) ? parsed.order : [];
+      var validOrder = storedOrder.filter(function (id) {
+        return sectionById[id];
+      });
+
+      defaultOrder.forEach(function (id) {
+        if (validOrder.indexOf(id) === -1) {
+          validOrder.push(id);
+        }
+      });
+
+      var visible = {};
+      validOrder.forEach(function (id) {
+        var savedValue = parsed.visible && parsed.visible[id];
+        visible[id] = savedValue !== false;
+      });
+
+      return {
+        order: validOrder,
+        visible: visible,
+      };
+    }
+
+    var prefs = loadPrefs();
+
+    function persistPrefsToServer() {
+      return fetch("/analysis/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(prefs)
+      }).catch(function () {
+        return null;
+      });
+    }
+
+    function savePrefs() {
+      serverChartPreferences = prefs;
+      persistPrefsToServer();
+    }
+
+    function applyPrefs() {
+      prefs.order.forEach(function (id) {
+        var section = sectionById[id];
+        if (!section) {
+          return;
+        }
+        container.appendChild(section);
+        section.classList.toggle("is-hidden", !prefs.visible[id]);
+      });
+    }
+
+    var draggedId = null;
+
+    function moveItem(movedId, targetId) {
+      if (!movedId || !targetId || movedId === targetId) {
+        return;
+      }
+      var movedIndex = prefs.order.indexOf(movedId);
+      var targetIndex = prefs.order.indexOf(targetId);
+      if (movedIndex === -1 || targetIndex === -1) {
+        return;
+      }
+      prefs.order.splice(movedIndex, 1);
+      prefs.order.splice(targetIndex, 0, movedId);
+      savePrefs();
+      applyPrefs();
+      renderList();
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+      prefs.order.forEach(function (id) {
+        var section = sectionById[id];
+        if (!section) {
+          return;
+        }
+
+        var item = document.createElement("li");
+        item.className = "chart-config-item";
+        item.setAttribute("draggable", "true");
+        item.setAttribute("data-chart-id", id);
+
+        var left = document.createElement("label");
+        left.className = "chart-config-label";
+
+        var checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = prefs.visible[id];
+        checkbox.addEventListener("change", function () {
+          prefs.visible[id] = checkbox.checked;
+          savePrefs();
+          applyPrefs();
+        });
+
+        var text = document.createElement("span");
+        text.textContent = section.getAttribute("data-chart-label") || id;
+
+        left.appendChild(checkbox);
+        left.appendChild(text);
+
+        var drag = document.createElement("button");
+        drag.type = "button";
+        drag.className = "chart-drag-handle";
+        drag.textContent = "≡";
+        drag.title = "Drag to reorder";
+        drag.tabIndex = -1;
+
+        item.appendChild(left);
+        item.appendChild(drag);
+
+        item.addEventListener("dragstart", function () {
+          draggedId = id;
+          item.classList.add("is-dragging");
+        });
+
+        item.addEventListener("dragend", function () {
+          draggedId = null;
+          item.classList.remove("is-dragging");
+          Array.from(list.children).forEach(function (node) {
+            node.classList.remove("drag-over");
+          });
+        });
+
+        item.addEventListener("dragover", function (event) {
+          event.preventDefault();
+          item.classList.add("drag-over");
+        });
+
+        item.addEventListener("dragleave", function () {
+          item.classList.remove("drag-over");
+        });
+
+        item.addEventListener("drop", function (event) {
+          event.preventDefault();
+          item.classList.remove("drag-over");
+          moveItem(draggedId, id);
+        });
+
+        list.appendChild(item);
+      });
+    }
+
+    function closePopover() {
+      popover.classList.add("is-hidden");
+      button.setAttribute("aria-expanded", "false");
+    }
+
+    function togglePopover() {
+      var isHidden = popover.classList.contains("is-hidden");
+      if (isHidden) {
+        popover.classList.remove("is-hidden");
+        button.setAttribute("aria-expanded", "true");
+      } else {
+        closePopover();
+      }
+    }
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      togglePopover();
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!popover.contains(event.target) && !button.contains(event.target)) {
+        closePopover();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closePopover();
+      }
+    });
+
+    applyPrefs();
+    renderList();
+  })();
+</script>
+
+<style>
+  .analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .analysis-header h2 {
+    margin-top: 0;
+  }
+
+  .analysis-filters {
+    display: flex;
+    gap: 12px;
+  }
+
+  .analysis-filters label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .chart-config-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .chart-config-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 320px;
+    max-height: 70vh;
+    overflow: auto;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 50;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .chart-config-title {
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+
+  .chart-config-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .chart-config-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .chart-config-item.drag-over {
+    border-color: #f08a24;
+  }
+
+  .chart-config-item.is-dragging {
+    opacity: 0.6;
+  }
+
+  .chart-config-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .chart-config-label input {
+    margin: 0;
+    width: 1rem;
+    height: 1rem;
+    padding: 0;
+    accent-color: var(--accent);
+  }
+
+  .chart-config-label span {
+    line-height: 1.2;
+  }
+
+  .chart-drag-handle {
+    border: 0;
+    background: transparent;
+    color: var(--neutral);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: grab;
+    padding: 2px 4px;
+  }
+
+  .chart-drag-handle:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--ink);
+    transform: none;
+  }
+
+  .chart-panel {
+    min-height: 500px;
+  }
+</style>
+{% endblock %}

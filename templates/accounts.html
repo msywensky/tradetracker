@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel" id="accounts">
+  <h2>Accounts</h2>
+
+  {% if account_error %}
+  <p class="hint" style="color:var(--danger,#e05);">{{ account_error }}</p>
+  {% endif %}
+
+  <!-- Add account form -->
+  <form class="form-grid" method="post" action="{{ url_for('create_account') }}" style="margin-bottom:1.5rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <label>
+      Short Name
+      <input type="text" name="short_name" placeholder="MAIN" required />
+    </label>
+    <label>
+      Full Name
+      <input type="text" name="full_name" placeholder="Primary Brokerage" required />
+    </label>
+    <label>
+      Fee Per Contract
+      <input type="number" name="fee_per_contract" min="0" step="0.01" value="0.65" required />
+    </label>
+    <button type="submit" class="btn-compact"><i class="fa-solid fa-user-plus btn-icon"></i>Add Account</button>
+  </form>
+
+  <!-- Accounts list -->
+  {% if accounts %}
+  <ul class="account-list">
+    {% for account in accounts %}
+    <li class="account-list-item" id="account-row-{{ account.id }}">
+
+      <!-- View row -->
+      <div class="account-list-view">
+        <div class="account-list-info">
+          <span class="account-list-short">{{ account.short_name }}</span>
+          {% if default_account_id == account.id %}
+          <span class="account-list-default" title="Default account"><i class="fa-solid fa-star"></i></span>
+          {% endif %}
+          <span class="account-list-full">{{ account.full_name }}</span>
+          <span class="account-list-fee hint">Fee: {{ account.fee_per_contract | money }}/contract</span>
+        </div>
+        <div class="account-list-actions">
+          <button class="btn-compact account-edit-btn" data-id="{{ account.id }}">
+            <i class="fa-solid fa-pen btn-icon"></i>Edit
+          </button>
+          {% if default_account_id != account.id %}
+          <form method="post" action="{{ url_for('set_default_account', account_id=account.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn-compact">
+              <i class="fa-regular fa-star btn-icon"></i>Set Default
+            </button>
+          </form>
+          {% endif %}
+          <form class="account-delete-form" method="post" action="{{ url_for('delete_account', account_id=account.id) }}" style="display:inline;" data-name="{{ account.short_name }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn-compact danger">
+              <i class="fa-solid fa-trash btn-icon"></i>Delete
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Inline edit form (hidden by default) -->
+      <form class="account-list-edit is-hidden" method="post" action="{{ url_for('update_account', account_id=account.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="form-grid" style="margin:0;">
+          <label>
+            Short Name
+            <input type="text" name="short_name" value="{{ account.short_name }}" required />
+          </label>
+          <label>
+            Full Name
+            <input type="text" name="full_name" value="{{ account.full_name }}" required />
+          </label>
+          <label>
+            Fee Per Contract
+            <input type="number" name="fee_per_contract" min="0" step="0.01" value="{{ account.fee_per_contract }}" required />
+          </label>
+          <div style="display:flex;gap:.5rem;align-items:flex-end;">
+            <button type="submit" class="btn-compact"><i class="fa-solid fa-floppy-disk btn-icon"></i>Save</button>
+            <button type="button" class="btn-compact account-cancel-btn" data-id="{{ account.id }}"><i class="fa-solid fa-xmark btn-icon"></i>Cancel</button>
+          </div>
+        </div>
+      </form>
+
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No accounts yet — add one above.</p>
+  {% endif %}
+</section>
+
+<style>
+  .account-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .account-list-item {
+    background: var(--card-bg, rgba(255,255,255,.04));
+    border: 1px solid var(--border, rgba(255,255,255,.08));
+    border-radius: 8px;
+    padding: .75rem 1rem;
+  }
+  .account-list-view {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .account-list-info {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .account-list-short {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .04em;
+  }
+  .account-list-default {
+    color: var(--accent, #f5a623);
+    font-size: .85rem;
+  }
+  .account-list-full {
+    color: var(--text-secondary, #aaa);
+  }
+  .account-list-fee {
+    font-size: .8rem;
+  }
+  .account-list-actions {
+    display: flex;
+    gap: .4rem;
+    flex-shrink: 0;
+  }
+  .account-list-edit {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px solid var(--border, rgba(255,255,255,.08));
+  }
+</style>
+
+<script>
+  (function () {
+    document.querySelectorAll(".account-edit-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.dataset.id;
+        var row = document.getElementById("account-row-" + id);
+        row.querySelector(".account-list-view").classList.add("is-hidden");
+        row.querySelector(".account-list-edit").classList.remove("is-hidden");
+      });
+    });
+
+    document.querySelectorAll(".account-cancel-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.dataset.id;
+        var row = document.getElementById("account-row-" + id);
+        var editForm = row.querySelector(".account-list-edit");
+        editForm.reset();
+        editForm.classList.add("is-hidden");
+        row.querySelector(".account-list-view").classList.remove("is-hidden");
+      });
+    });
+
+    document.querySelectorAll(".account-delete-form").forEach(function (form) {
+      form.addEventListener("submit", function (e) {
+        var name = form.dataset.name || "this account";
+        if (!window.confirm("Delete " + name + "? This cannot be undone.")) {
+          e.preventDefault();
+        }
+      });
+    });
+  })();
+</script>
+{% endblock %}

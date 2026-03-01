@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel home-section">
+  <h2>Create Trade</h2>
+  <form class="form-grid create-trade-form" method="post" action="{{ url_for('create_trade') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <label>
+      Trade ID (optional)
+      <input type="text" name="trade_code" placeholder="TRD-20260211-001" />
+    </label>
+    <label>
+      Symbol
+      <input class="symbol-input" type="text" name="symbol" placeholder="SPY" value="SPY" required />
+    </label>
+    <label>
+      Type
+      <select name="option_type">
+        <option value="CALL" selected>Call</option>
+        <option value="PUT">Put</option>
+      </select>
+    </label>
+    <label>
+      Account
+      <select name="account_id" required>
+        {% if accounts %}
+        {% for account in accounts %}
+        <option value="{{ account.id }}" {% if selected_account_id == account.id %}selected{% endif %}>{{ account.short_name }}</option>
+        {% endfor %}
+        {% else %}
+        <option value="">No accounts yet</option>
+        {% endif %}
+      </select>
+    </label>
+    <label>
+      Expiration (optional)
+      <input type="date" name="expiration" value="{{ next_expiration.isoformat() }}" />
+    </label>
+    <label>
+      Strike (optional)
+      <input class="strike-input" type="number" name="strike" min="0" max="999999.99" step="0.01" placeholder="0.00" />
+    </label>
+    <button type="submit" class="btn-compact"><i class="fa-solid fa-play btn-icon"></i>Open</button>
+  </form>
+</section>
+
+<section class="panel home-section" id="balances">
+  <button class="section-toggle" data-section="balances">
+    <h2>Balances</h2>
+  </button>
+  <div class="section-content">
+    <form class="form-grid" method="post" action="{{ url_for('create_balance') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <label>
+        Date
+        <input type="date" name="date" value="{{ today.isoformat() }}" required />
+      </label>
+      <label>
+        Account
+        <select name="account_id" required>
+          {% if accounts %}
+          {% for account in accounts %}
+          <option value="{{ account.id }}" {% if selected_account_id == account.id %}selected{% endif %}>{{ account.short_name }}</option>
+          {% endfor %}
+          {% else %}
+          <option value="">No accounts yet</option>
+          {% endif %}
+        </select>
+      </label>
+      <label>
+        Balance
+        <input type="number" name="balance" min="0" step="0.01" required />
+      </label>
+      <button type="submit" class="btn-compact"><i class="fa-solid fa-floppy-disk btn-icon"></i>Save Balance</button>
+    </form>
+
+    {% if recent_balances %}
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Account</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in recent_balances %}
+        <tr>
+          <td>{{ row.date }}</td>
+          <td>{{ row.account_short or 'Unassigned' }}</td>
+          <td>{{ row.balance | money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No balances recorded yet.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel home-section">
+  <h2>Open Trades</h2>
+  {% if open_trades %}
+  <div class="trade-grid">
+    {% for trade in open_trades %}
+    <a class="trade-card" href="{{ url_for('trade_detail', trade_id=trade.id) }}">
+      <div class="trade-card-header">
+        <div class="trade-card-meta-left">
+          <strong class="trade-card-ticker">{{ trade.symbol }} {{ trade.option_type or 'CALL' }}</strong>
+          <span class="trade-card-account">{{ trade.account_short or 'Unassigned' }}</span>
+          {% if trade.expiration %}
+          <span class="trade-card-opened">Exp {{ trade.expiration }}</span>
+          {% endif %}
+          {% if trade.strike is not none %}
+          <span class="trade-card-opened">Strike {{ '%.2f' | format(trade.strike) }}</span>
+          {% endif %}
+          <span class="trade-card-opened">Opened {{ trade.created_at }}</span>
+        </div>
+        <h3>{{ trade.trade_code }}</h3>
+      </div>
+      <p class="hint">Bought: {{ trade.buy_contracts }} @ {{ trade.avg_buy_price | money }}</p>
+      <p class="hint">Sold: {{ trade.sell_contracts }} @ {{ trade.avg_sell_price | money }}</p>
+      <p class="hint">Notes: {{ trade.notes or '—' }}</p>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No open trades yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel home-section" id="recently-closed">
+  <button class="section-toggle" data-section="recently-closed">
+    <h2>Closed Today</h2>
+  </button>
+  <div class="section-content is-hidden">
+    {% if closed_trades %}
+    <div class="trade-grid">
+      {% for trade in closed_trades %}
+      <a class="trade-card" href="{{ url_for('trade_detail', trade_id=trade.id) }}">
+        <h3>{{ trade.trade_code }}</h3>
+        <p>{{ trade.symbol }}</p>
+        <p class="hint">Acct: {{ trade.account_short or 'Unassigned' }}</p>
+        <span>Closed {{ trade.closed_at }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">No trades closed today.</p>
+    {% endif %}
+  </div>
+</section>
+<script>
+  (function enableCollapsibleSections() {
+    var toggles = document.querySelectorAll(".section-toggle");
+    toggles.forEach(function (toggle) {
+      var sectionId = toggle.getAttribute("data-section");
+      var section = document.getElementById(sectionId);
+      var content = section ? section.querySelector(".section-content") : null;
+
+      if (!content) {
+        return;
+      }
+
+      // Mark as collapsed initially since content has is-hidden
+      if (content.classList.contains("is-hidden")) {
+        toggle.classList.add("is-collapsed");
+      }
+
+      toggle.addEventListener("click", function (event) {
+        event.preventDefault();
+        content.classList.toggle("is-hidden");
+        toggle.classList.toggle("is-collapsed");
+      });
+    });
+  })();
+
+</script>
+{% endblock %}

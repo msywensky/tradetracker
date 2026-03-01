@@ -1,0 +1,825 @@
+:root {
+  --ink: #1b1b1f; /* Text */
+  --paper: #f9fafb; /* Light bg */
+  --accent: #f08a24; /* Orange CTAs */
+  --accent-dark: #c56d18; /* Hover */
+  --panel: #ffffff; /* Cards */
+  --shadow: rgba(0, 0, 0, 0.1); /* Softer */
+  --positive: #22c55e; /* Green */
+  --negative: #ef4444; /* Red */
+  --neutral: #6b7280; /* Hints */
+  --border: #e5e7eb; /* Light borders */
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  --ink: #f9fafb;
+  --paper: #1f2937;
+  --panel: #374151;
+  --shadow: rgba(0, 0, 0, 0.2);
+  --border: #4b5563;
+  --positive: #86efac;
+  --negative: #fca5a5;
+  --neutral: #9ca3af;
+  --accent: #fb923c; /* Lighter orange for dark */
+  --accent-dark: #ea580c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--paper);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+.bg-texture {
+  display: none; /* Remove old texture; use subtle bg if needed */
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 5%;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: 0 2px 4px var(--shadow);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--panel);
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.site-header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--neutral);
+}
+
+nav a {
+  margin-left: 1.5rem;
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 500;
+  padding: 0.5rem 0;
+  transition: color 0.2s;
+}
+
+nav a:hover {
+  color: var(--accent);
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 5%;
+  display: grid;
+  gap: 2rem;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px var(--shadow);
+  transition: box-shadow 0.2s;
+}
+
+.panel:hover {
+  box-shadow: 0 6px 12px var(--shadow);
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+input, select, textarea, button {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(240, 138, 36, 0.1);
+  outline: none;
+}
+
+button {
+  background: var(--accent);
+  color: var(--panel);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+button.danger {
+  background: var(--negative);
+}
+
+button.danger:hover {
+  background: #dc2626;
+}
+
+.btn-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  border-radius: 0.45rem;
+  width: fit-content;
+  min-width: 0;
+}
+
+.form-grid > .btn-compact {
+  justify-self: start;
+  align-self: end;
+}
+
+.btn-icon {
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neutral);
+}
+
+tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02); /* Light hover */
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+.neutral {
+  color: var(--neutral);
+}
+
+.trade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.trade-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--ink);
+  transition: box-shadow 0.2s;
+}
+
+.trade-card:hover {
+  box-shadow: 0 4px 8px var(--shadow);
+}
+
+.trade-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.hint, .empty {
+  font-size: 0.875rem;
+  color: var(--neutral);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stats div {
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.stats span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--neutral);
+}
+
+.stats strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Dark mode toggle (add to layout.html) */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  margin-left: 1rem;
+}
+
+.balance-view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance-edit-row.is-hidden {
+  display: none !important;
+}
+
+.is-hidden { 
+  display: none !important; 
+}
+
+.balance-edit,
+.cancel-edit {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.cancel-edit {
+  background: var(--neutral);
+}
+
+.balance-edit:hover {
+  background: var(--accent-dark);
+}
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  nav {
+    margin-top: 1rem;
+  }
+  nav a {
+    margin: 0 1rem 0 0;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .create-trade-form, .trade-entry-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.balance-view,
+.balance-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.balance-amount {
+  min-width: 100px;
+  font-weight: 500;
+}
+
+.balance-edit-row input {
+  width: 140px;
+}
+
+.save-btn {
+  background: var(--positive);
+}
+
+.save-btn:hover {
+  background: #16a34a;
+}
+
+.cancel-edit {
+  background: var(--neutral);
+  color: white;
+}
+
+.cancel-edit:hover {
+  background: #4b5563;
+}
+
+table tbody tr {
+  transition: background 0.15s;
+}
+
+table tbody tr:hover {
+  background: rgba(240, 138, 36, 0.08); /* subtle orange tint */
+}
+/* Add icons (via Font Awesome CDN in layout.html head) */
+.nav-icon,
+.btn-icon {
+  margin-right: 0.5rem;
+}
+
+/* Restored template-specific UI styles */
+.month-header,
+.summary-header,
+.trade-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.month-nav label {
+  min-width: 160px;
+}
+
+.view-toggle {
+  min-width: 7rem;
+}
+
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.section-toggle:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: none;
+}
+
+.section-toggle h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+.section-content {
+  margin-top: 1rem;
+}
+
+.sortable-date-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable-date-header:hover {
+  color: var(--accent);
+}
+
+.summary-delete-action {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.trade-summary-row:hover .summary-delete-action,
+.trade-summary-row.is-active .summary-delete-action {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.calendar-view {
+  margin-top: 1rem;
+}
+
+.calendar {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.calendar-header,
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.calendar-header > div {
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--neutral);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.calendar-header > div:last-child {
+  border-right: none;
+}
+
+.calendar-day,
+.calendar-week {
+  min-height: 88px;
+  padding: 0.5rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: flex-start;
+}
+
+.calendar-days > .calendar-day:nth-child(6n),
+.calendar-days > .calendar-week:nth-child(6n) {
+  border-right: none;
+}
+
+.calendar-day.empty,
+.calendar-week .day-pnl.empty {
+  color: var(--neutral);
+}
+
+.calendar-day.has-trades {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.calendar-day[data-date] {
+  cursor: pointer;
+}
+
+.calendar-day[data-date]:hover {
+  background: rgba(240, 138, 36, 0.08);
+}
+
+.calendar-day.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: rgba(240, 138, 36, 0.12);
+}
+
+.calendar-day.positive,
+.calendar-week.positive {
+  border-left: 3px solid var(--positive);
+}
+
+.calendar-day.negative,
+.calendar-week.negative {
+  border-left: 3px solid var(--negative);
+}
+
+.day-number {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.day-trades,
+.day-pnl,
+.week-label {
+  font-size: 0.8rem;
+}
+
+.day-pnl {
+  font-weight: 600;
+}
+
+.calendar-week {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.week-label {
+  color: var(--neutral);
+  font-weight: 600;
+}
+
+.calendar-day-summary {
+  width: min(760px, calc(100% - 2rem));
+  margin: 1.25rem auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+  box-shadow: 0 6px 16px var(--shadow);
+}
+
+.calendar-day-summary-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.calendar-day-summary-header p {
+  margin: 0.25rem 0 0.9rem;
+  color: var(--neutral);
+  font-size: 0.9rem;
+}
+
+.calendar-day-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.summary-metric {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.summary-metric span {
+  display: block;
+  color: var(--neutral);
+  font-size: 0.75rem;
+  margin-bottom: 0.2rem;
+}
+
+.summary-metric strong {
+  font-size: 1rem;
+}
+
+.balance-form {
+  margin: 0;
+}
+
+.account-view {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.account-edit {
+  margin-top: 0.75rem;
+}
+
+.account-actions,
+.trade-close-actions,
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.edit-actions {
+  align-items: center;
+}
+
+.entry-row .edit-field,
+.entry-row.editing .view-field {
+  display: none;
+}
+
+.entry-row.editing .edit-field,
+.entry-row.editing .edit-actions {
+  display: inline-flex;
+}
+
+.entry-row .edit-actions {
+  display: none;
+}
+
+.entry-row.editing {
+  background: rgba(240, 138, 36, 0.08);
+}
+
+@media (max-width: 900px) {
+  .month-nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .calendar-header,
+  .calendar-days {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .calendar-header > div,
+  .calendar-day,
+  .calendar-week {
+    border-right: 1px solid var(--border);
+  }
+
+  .calendar-days > .calendar-day:nth-child(6n),
+  .calendar-days > .calendar-week:nth-child(6n) {
+    border-right: 1px solid var(--border);
+  }
+
+  .calendar-days > .calendar-day:nth-child(3n),
+  .calendar-days > .calendar-week:nth-child(3n) {
+    border-right: none;
+  }
+
+  .calendar-day-summary {
+    width: calc(100% - 1rem);
+    margin: 1rem auto;
+  }
+}
+
+/* ── Journal ────────────────────────────────────────────── */
+#journal-entry-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.full-width { grid-column: 1 / -1; }
+.col-1 { grid-column: span 1; }
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent-dark); }
+
+.tags-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+  margin-top: -0.5rem;
+}
+
+.tag-chip {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.25rem 0.65rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.entry-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  transition: box-shadow 0.2s;
+}
+.entry-card:hover { box-shadow: 0 4px 12px var(--shadow); }
+
+.entry-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.entry-title {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.entry-tags .tag-chip {
+  background: var(--border);
+  color: var(--ink);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.entry-text {
+  margin: 0 0 0.5rem;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.linked-trade {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--neutral);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  #journal-entry-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+  #journal-entry-form .col-1,
+  #journal-entry-form .col-2,
+  #journal-entry-form .col-3 {
+    grid-column: 1 / -1;
+  }
+}

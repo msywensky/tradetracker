@@ -1,0 +1,211 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel">
+  <div class="trade-header">
+    <div>
+      <h2>{{ trade.trade_code }} - {{ trade.symbol }} {{ trade.option_type or 'CALL' }}</h2>
+      <p>Status: {{ trade.status }}</p>
+      <p class="hint">Account: {{ trade.account_short or 'Unassigned' }}</p>
+      <p class="hint">
+        Exp: {{ trade.expiration or '—' }} · Strike: {{ '%.2f' | format(trade.strike) if trade.strike is not none else '—' }}
+      </p>
+    </div>
+    <div class="stats">
+      <div>
+        <span>Open Contracts</span>
+        <strong>{{ open_contracts }}</strong>
+      </div>
+      <div>
+        <span>PnL Before Fees</span>
+        <strong>{{ stats.pnl_before | money }}</strong>
+      </div>
+      <div>
+        <span>PnL After Fees</span>
+        <strong>{{ stats.pnl_after | money }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <form class="form-grid trade-entry-form" method="post" action="{{ url_for('add_entry', trade_id=trade.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <label>
+      Buy / Sell
+      <select name="side" id="entry-side" required>
+        <option value="BUY">Buy</option>
+        <option value="SELL">Sell</option>
+      </select>
+    </label>
+    <label>
+      # of Options
+      <input type="number" id="entry-contracts" name="contracts" min="1" required />
+    </label>
+    <label>
+      Price x 100
+      <input type="number" id="entry-price" name="price" min="0.01" step="0.01" required />
+    </label>
+    <button type="submit" class="btn-compact"><i class="fa-solid fa-plus btn-icon"></i>Add</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Entries</h2>
+  {% if entries %}
+  <table>
+    <thead>
+      <tr>
+        <th>Side</th>
+        <th>Contracts</th>
+        <th>Price x100</th>
+        <th>Timestamp</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr class="entry-row" data-entry-id="{{ entry.id }}">
+        <td>
+          <span class="view-field">{{ entry.side }}</span>
+          <select class="edit-field" name="side" form="entry-form-{{ entry.id }}" required>
+            <option value="BUY" {% if entry.side == "BUY" %}selected{% endif %}>Buy</option>
+            <option value="SELL" {% if entry.side == "SELL" %}selected{% endif %}>Sell</option>
+          </select>
+        </td>
+        <td>
+          <span class="view-field">{{ entry.contracts }}</span>
+          <input class="edit-field" type="number" name="contracts" min="1" value="{{ entry.contracts }}" form="entry-form-{{ entry.id }}" required />
+        </td>
+        <td>
+          <span class="view-field">{{ entry.price }}</span>
+          <input class="edit-field" type="number" name="price" min="0.01" step="0.01" value="{{ entry.price }}" form="entry-form-{{ entry.id }}" required />
+        </td>
+        <td>{{ entry.created_at }}</td>
+        <td>
+          <form id="entry-form-{{ entry.id }}" method="post" action="{{ url_for('update_entry', entry_id=entry.id) }}">
+            <input type="hidden" name="trade_id" value="{{ trade.id }}" />
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          </form>
+          <form id="entry-delete-form-{{ entry.id }}" method="post" action="{{ url_for('delete_entry', entry_id=entry.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}" /></form>
+          <div class="edit-actions">
+            <button type="submit" form="entry-form-{{ entry.id }}">Save</button>
+            <button type="button" class="cancel-edit">Cancel</button>
+            <button type="submit" class="danger" form="entry-delete-form-{{ entry.id }}" onclick="return window.confirm('Delete this entry?')">Delete</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No entries yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <label>
+    Notes
+    <textarea id="trade-notes" rows="4" placeholder="Add notes for this trade...">{{ trade.notes or '' }}</textarea>
+  </label>
+  <div class="trade-close-actions">
+    <form method="post" action="{{ url_for('close_trade', trade_id=trade.id) }}" onsubmit="return confirmCloseTrade(this)">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="notes" value="" />
+      <button type="submit" {% if open_contracts != 0 %}disabled{% endif %}>Save and Close Trade</button>
+    </form>
+    <form method="post" action="{{ url_for('save_trade_open', trade_id=trade.id) }}" onsubmit="return confirmSaveOpen(this)">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="hidden" name="notes" value="" />
+      <button type="submit">Save and Leave Open</button>
+    </form>
+    <form method="post" action="{{ url_for('delete_trade', trade_id=trade.id) }}" onsubmit="return window.confirm('Delete this trade and all its entries?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="danger">Delete Trade</button>
+    </form>
+  </div>
+  {% if open_contracts != 0 %}
+  <p class="hint">You must close all contracts before closing the trade.</p>
+  {% endif %}
+</section>
+
+<script>
+  (function persistSide() {
+    var key = "entry-side-{{ trade.id }}";
+    var select = document.getElementById("entry-side");
+    var contractsInput = document.getElementById("entry-contracts");
+    var remainingOpen = {{ open_contracts }};
+
+    function applySellDefault() {
+      if (!select || !contractsInput) {
+        return;
+      }
+      if (select.value === "SELL" && remainingOpen > 0) {
+        contractsInput.value = String(remainingOpen);
+      }
+    }
+
+    if (!select) {
+      return;
+    }
+    var stored = window.localStorage.getItem(key);
+    if (stored) {
+      select.value = stored;
+      applySellDefault();
+    }
+    select.addEventListener("change", function () {
+      window.localStorage.setItem(key, select.value);
+      applySellDefault();
+    });
+    select.form.addEventListener("submit", function () {
+      window.localStorage.setItem(key, select.value);
+    });
+  })();
+
+  (function enableInlineEdits() {
+    var rows = document.querySelectorAll(".entry-row");
+    rows.forEach(function (row) {
+      row.addEventListener("click", function (event) {
+        if (row.classList.contains("editing")) {
+          return;
+        }
+        if (event.target.closest("button") || event.target.closest("select") || event.target.closest("input")) {
+          return;
+        }
+        row.classList.add("editing");
+      });
+
+      var cancel = row.querySelector(".cancel-edit");
+      if (cancel) {
+        cancel.addEventListener("click", function (event) {
+          event.preventDefault();
+          row.classList.remove("editing");
+          var formId = row.querySelector("form")?.id;
+          if (!formId) {
+            return;
+          }
+          var form = document.getElementById(formId);
+          if (!form) {
+            return;
+          }
+          form.reset();
+        });
+      }
+    });
+  })();
+
+  function confirmCloseTrade(form) {
+    if ({{ open_contracts }} !== 0) {
+      return false;
+    }
+    var notesInput = document.getElementById("trade-notes");
+    var notes = notesInput ? notesInput.value.trim() : "";
+    form.querySelector('input[name="notes"]').value = notes;
+    return window.confirm("Close trade and save to month sheet?");
+  }
+
+  function confirmSaveOpen(form) {
+    var notesInput = document.getElementById("trade-notes");
+    var notes = notesInput ? notesInput.value.trim() : "";
+    form.querySelector('input[name="notes"]').value = notes;
+    return window.confirm("Save trade and leave it open?");
+  }
+</script>
+{% endblock %}
