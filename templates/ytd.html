@@ -1,48 +1,76 @@
-{% extends "layout.html" %}
-{% block content %}
+{% extends "layout.html" %} {% block content %}
 <section class="panel">
   <h2>{{ start_date.year }} - YTD Summary</h2>
   <div class="stats">
-    <div>
+    <div class="kpi-positive">
       <span>Winning Trades</span>
-      <strong>{{ ytd_stats.wins }}</strong>
+      <strong class="positive">{{ ytd_stats.wins }}</strong>
     </div>
-    <div>
+    <div class="kpi-negative">
       <span>Losing Trades</span>
-      <strong>{{ ytd_stats.losses }}</strong>
+      <strong class="negative">{{ ytd_stats.losses }}</strong>
     </div>
     <div>
       <span>Win %</span>
-      <strong>{{ ytd_stats.win_pct | pct }}</strong>
+      <strong
+        class="{% if ytd_stats.win_pct >= 0.5 %}positive{% elif ytd_stats.win_pct > 0 %}negative{% else %}neutral{% endif %}"
+        >{{ ytd_stats.win_pct | pct }}</strong
+      >
     </div>
-    <div>
+    <div
+      class="{% if ytd_stats.total_pnl > 0 %}kpi-positive{% elif ytd_stats.total_pnl < 0 %}kpi-negative{% endif %}"
+    >
       <span>Total PnL</span>
-      <strong>{{ ytd_stats.total_pnl | money }}</strong>
+      <strong
+        class="{% if ytd_stats.total_pnl > 0 %}positive{% elif ytd_stats.total_pnl < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ ytd_stats.total_pnl | money }}</strong
+      >
     </div>
     <div>
       <span>Total Fees</span>
-      <strong>{{ ytd_stats.total_fees | money }}</strong>
+      <strong
+        class="{% if ytd_stats.total_fees > 0 %}negative{% else %}neutral{% endif %}"
+        >{{ ytd_stats.total_fees | money }}</strong
+      >
     </div>
     <div>
       <span>Avg Daily PnL</span>
-      <strong>{{ ytd_stats.daily_avg | money }}</strong>
+      <strong
+        class="{% if ytd_stats.daily_avg > 0 %}positive{% elif ytd_stats.daily_avg < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ ytd_stats.daily_avg | money }}</strong
+      >
     </div>
     <div>
       <span>Median Daily PnL</span>
-      <strong>{{ ytd_stats.daily_median | money }}</strong>
+      <strong
+        class="{% if ytd_stats.daily_median > 0 %}positive{% elif ytd_stats.daily_median < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ ytd_stats.daily_median | money }}</strong
+      >
     </div>
   </div>
 </section>
 
 <section class="panel">
   <h2>YTD Daily Summary</h2>
-  <form method="get" class="form-grid" action="{{ url_for('ytd_summary', year=start_date.year) }}">
+  <form
+    method="get"
+    class="form-grid"
+    action="{{ url_for('ytd_summary', year=start_date.year) }}"
+  >
     <label>
       Account
       <select name="account" onchange="this.form.submit()">
-        <option value="ALL" {% if selected_account is none %}selected{% endif %}>ALL</option>
+        <option
+          value="ALL"
+          {% if selected_account is none %}selected{% endif %}
+        >
+          ALL
+        </option>
         {% for account in accounts %}
-        <option value="{{ account.id }}" {% if selected_account == account.id %}selected{% endif %}>
+        <option
+          value="{{ account.id }}"
+          {% if selected_account == account.id %}selected{% endif %}
+        >
           {{ account.short_name }}
         </option>
         {% endfor %}
@@ -54,7 +82,9 @@
   <table id="ytd-daily-table">
     <thead>
       <tr>
-        <th class="sortable-date-header" data-sort-table="ytd-daily-table">Date</th>
+        <th class="sortable-date-header" data-sort-table="ytd-daily-table">
+          Date
+        </th>
         <th># Options</th>
         <th>Winning Trades</th>
         <th>Losing Trades</th>
@@ -74,13 +104,18 @@
         <td>
           {% if selected_account is none %}
           <span class="empty">Select account</span>
-          {% else %}
-          {{ row.balance | money if row.balance is not none else '-' }}
-          {% endif %}
+          {% else %} {{ row.balance | money if row.balance is not none else '-'
+          }} {% endif %}
         </td>
-        <td class="{% if row.pnl_before < 0 %}negative{% endif %}">{{ row.pnl_before | money }}</td>
-        <td class="{% if row.pnl_after < 0 %}negative{% endif %}">{{ row.pnl_after | money }}</td>
-        <td class="{% if row.running_total < 0 %}negative{% endif %}">{{ row.running_total | money }}</td>
+        <td class="{% if row.pnl_before < 0 %}negative{% endif %}">
+          {{ row.pnl_before | money }}
+        </td>
+        <td class="{% if row.pnl_after < 0 %}negative{% endif %}">
+          {{ row.pnl_after | money }}
+        </td>
+        <td class="{% if row.running_total < 0 %}negative{% endif %}">
+          {{ row.running_total | money }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -96,7 +131,9 @@
   <table id="ytd-trade-table">
     <thead>
       <tr>
-        <th class="sortable-date-header" data-sort-table="ytd-trade-table">Date</th>
+        <th class="sortable-date-header" data-sort-table="ytd-trade-table">
+          Date
+        </th>
         <th>Trade ID</th>
         <th>Account</th>
         <th>Symbol</th>
@@ -109,27 +146,32 @@
       </tr>
     </thead>
     <tbody>
-      {% for row in trade_rows %}
-      {% set trade_dt = row.trade.created_at or row.trade.closed_at %}
-      <tr title="{{ row.trade.notes or 'No comment' }}" data-sort-date="{{ trade_dt }}">
+      {% for row in trade_rows %} {% set trade_dt = row.trade.created_at or
+      row.trade.closed_at %}
+      <tr
+        title="{{ row.trade.notes or 'No comment' }}"
+        data-sort-date="{{ trade_dt }}"
+      >
         <td>
-          {% if trade_dt and trade_dt|length >= 16 %}
-            {{ trade_dt[5:10] }} {{ trade_dt[11:16] }}
-          {% elif trade_dt and trade_dt|length >= 10 %}
-            {{ trade_dt[5:10] }} 00:00
-          {% else %}
-            {{ trade_dt }}
-          {% endif %}
+          {% if trade_dt and trade_dt|length >= 16 %} {{ trade_dt[5:10] }} {{
+          trade_dt[11:16] }} {% elif trade_dt and trade_dt|length >= 10 %} {{
+          trade_dt[5:10] }} 00:00 {% else %} {{ trade_dt }} {% endif %}
         </td>
         <td>{{ row.trade.trade_code }}</td>
         <td>{{ row.trade.account_short or 'Unassigned' }}</td>
         <td>{{ row.trade.symbol }}</td>
-        <td>{{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}</td>
+        <td>
+          {{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}
+        </td>
         <td>{{ row.stats.total_contracts }}</td>
         <td>{{ row.stats.avg_buy | money }}</td>
         <td>{{ row.stats.avg_sell | money }}</td>
-        <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">{{ row.stats.pnl_before | money }}</td>
-        <td class="{% if row.stats.percent < 0 %}negative{% endif %}">{{ row.stats.percent | pct }}</td>
+        <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">
+          {{ row.stats.pnl_before | money }}
+        </td>
+        <td class="{% if row.stats.percent < 0 %}negative{% endif %}">
+          {{ row.stats.percent | pct }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -158,7 +200,9 @@
       rows.sort(function (a, b) {
         var aDate = a.getAttribute("data-sort-date") || "";
         var bDate = b.getAttribute("data-sort-date") || "";
-        return nextDir === "asc" ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+        return nextDir === "asc"
+          ? aDate.localeCompare(bDate)
+          : bDate.localeCompare(aDate);
       });
 
       rows.forEach(function (row) {
@@ -168,7 +212,9 @@
       table.setAttribute("data-sort-dir", nextDir);
     }
 
-    var headers = document.querySelectorAll(".sortable-date-header[data-sort-table]");
+    var headers = document.querySelectorAll(
+      ".sortable-date-header[data-sort-table]",
+    );
     headers.forEach(function (header) {
       header.addEventListener("click", function () {
         var tableId = header.getAttribute("data-sort-table");

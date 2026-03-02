@@ -10,7 +10,9 @@
   --neutral: #6b7280; /* Hints */
   --border: #e5e7eb; /* Light borders */
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 [data-theme="dark"] {
@@ -137,17 +139,24 @@ label {
   font-weight: 500;
 }
 
-input, select, textarea, button {
+input,
+select,
+textarea,
+button {
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--ink);
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(240, 138, 36, 0.1);
   outline: none;
@@ -159,7 +168,9 @@ button {
   border: none;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.2s, transform 0.1s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
 }
 
 button:hover {
@@ -204,7 +215,8 @@ table {
   margin-top: 1rem;
 }
 
-th, td {
+th,
+td {
   padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
@@ -259,34 +271,52 @@ tbody tr:hover {
   font-size: 1.1rem;
 }
 
-.hint, .empty {
+.hint,
+.empty {
   font-size: 0.875rem;
   color: var(--neutral);
 }
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
 .stats div {
-  background: rgba(0, 0, 0, 0.02);
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  box-shadow: 0 1px 3px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stats div.kpi-positive {
+  border-left: 3px solid var(--positive);
+}
+
+.stats div.kpi-negative {
+  border-left: 3px solid var(--negative);
 }
 
 .stats span {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--neutral);
 }
 
 .stats strong {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 700;
+  line-height: 1.1;
 }
 
 /* Dark mode toggle (add to layout.html) */
@@ -314,8 +344,8 @@ tbody tr:hover {
   display: none !important;
 }
 
-.is-hidden { 
-  display: none !important; 
+.is-hidden {
+  display: none !important;
 }
 
 .balance-edit,
@@ -351,7 +381,8 @@ tbody tr:hover {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  .create-trade-form, .trade-entry-form {
+  .create-trade-form,
+  .trade-entry-form {
     grid-template-columns: 1fr;
   }
 }
@@ -711,10 +742,18 @@ table tbody tr:hover {
   align-items: start;
 }
 
-.full-width { grid-column: 1 / -1; }
-.col-1 { grid-column: span 1; }
-.col-2 { grid-column: span 2; }
-.col-3 { grid-column: span 3; }
+.full-width {
+  grid-column: 1 / -1;
+}
+.col-1 {
+  grid-column: span 1;
+}
+.col-2 {
+  grid-column: span 2;
+}
+.col-3 {
+  grid-column: span 3;
+}
 
 .form-actions {
   grid-column: 1 / -1;
@@ -735,7 +774,9 @@ table tbody tr:hover {
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-primary:hover { background: var(--accent-dark); }
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
 
 .tags-preview {
   display: flex;
@@ -767,7 +808,9 @@ table tbody tr:hover {
   padding: 1.25rem;
   transition: box-shadow 0.2s;
 }
-.entry-card:hover { box-shadow: 0 4px 12px var(--shadow); }
+.entry-card:hover {
+  box-shadow: 0 4px 12px var(--shadow);
+}
 
 .entry-header {
   display: flex;

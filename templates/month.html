@@ -1,5 +1,4 @@
-{% extends "layout.html" %}
-{% block content %}
+{% extends "layout.html" %} {% block content %}
 <section class="panel">
   <div class="month-header">
     <h2>{{ month_start.strftime('%B %Y') }} - Monthly Summary</h2>
@@ -7,9 +6,17 @@
       <label>
         Account
         <select name="account" id="month-account-select">
-          <option value="ALL" {% if selected_account is none %}selected{% endif %}>ALL</option>
+          <option
+            value="ALL"
+            {% if selected_account is none %}selected{% endif %}
+          >
+            ALL
+          </option>
           {% for account in accounts %}
-          <option value="{{ account.id }}" {% if selected_account == account.id %}selected{% endif %}>
+          <option
+            value="{{ account.id }}"
+            {% if selected_account == account.id %}selected{% endif %}
+          >
             {{ account.short_name }}
           </option>
           {% endfor %}
@@ -19,7 +26,10 @@
         Month
         <select name="month" id="month-select">
           {% for m in range(1, 13) %}
-          <option value="{{ m }}" {% if m == month_start.month %}selected{% endif %}>
+          <option
+            value="{{ m }}"
+            {% if m == month_start.month %}selected{% endif %}
+          >
             {{ date(month_start.year, m, 1).strftime('%B') }}
           </option>
           {% endfor %}
@@ -28,33 +38,50 @@
     </form>
   </div>
   <div class="stats">
-    <div>
+    <div class="kpi-positive">
       <span>Winning Trades</span>
-      <strong>{{ month_stats.wins }}</strong>
+      <strong class="positive">{{ month_stats.wins }}</strong>
     </div>
-    <div>
+    <div class="kpi-negative">
       <span>Losing Trades</span>
-      <strong>{{ month_stats.losses }}</strong>
+      <strong class="negative">{{ month_stats.losses }}</strong>
     </div>
     <div>
       <span>Win %</span>
-      <strong>{{ month_stats.win_pct | pct }}</strong>
+      <strong
+        class="{% if month_stats.win_pct >= 0.5 %}positive{% elif month_stats.win_pct > 0 %}negative{% else %}neutral{% endif %}"
+        >{{ month_stats.win_pct | pct }}</strong
+      >
     </div>
-    <div>
+    <div
+      class="{% if month_stats.total_pnl > 0 %}kpi-positive{% elif month_stats.total_pnl < 0 %}kpi-negative{% endif %}"
+    >
       <span>Total PnL</span>
-      <strong>{{ month_stats.total_pnl | money }}</strong>
+      <strong
+        class="{% if month_stats.total_pnl > 0 %}positive{% elif month_stats.total_pnl < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ month_stats.total_pnl | money }}</strong
+      >
     </div>
     <div>
       <span>Total Fees</span>
-      <strong>{{ month_stats.total_fees | money }}</strong>
+      <strong
+        class="{% if month_stats.total_fees > 0 %}negative{% else %}neutral{% endif %}"
+        >{{ month_stats.total_fees | money }}</strong
+      >
     </div>
     <div>
       <span>Avg Daily PnL</span>
-      <strong>{{ month_stats.daily_avg | money }}</strong>
+      <strong
+        class="{% if month_stats.daily_avg > 0 %}positive{% elif month_stats.daily_avg < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ month_stats.daily_avg | money }}</strong
+      >
     </div>
     <div>
       <span>Median Daily PnL</span>
-      <strong>{{ month_stats.daily_median | money }}</strong>
+      <strong
+        class="{% if month_stats.daily_median > 0 %}positive{% elif month_stats.daily_median < 0 %}negative{% else %}neutral{% endif %}"
+        >{{ month_stats.daily_median | money }}</strong
+      >
     </div>
   </div>
 </section>
@@ -62,67 +89,113 @@
 <section class="panel">
   <div class="summary-header">
     <h2>{{ month_start.strftime('%B %Y') }} - Daily Summary</h2>
-    <button type="button" class="view-toggle btn-compact" data-toggle="summary-view" data-value="calendar">
+    <button
+      type="button"
+      class="view-toggle btn-compact"
+      data-toggle="summary-view"
+      data-value="calendar"
+    >
       Table
     </button>
   </div>
   <div id="summary-view-table" class="is-hidden">
     {% if daily_rows %}
-  <table id="month-daily-table">
-    <thead>
-      <tr>
-        <th class="sortable-date-header" data-sort-table="month-daily-table">Date</th>
-        <th># Options</th>
-        <th>Winning Trades</th>
-        <th>Losing Trades</th>
-        <th>Account Balance</th>
-        <th>PnL Before Fees</th>
-        <th>PnL With Fees</th>
-        <th>Running Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in daily_rows | reverse %}
-      <tr data-sort-date="{{ row.date }}">
-        <td>{{ row.date }}</td>
-        <td>{{ row.total_contracts }}</td>
-        <td>{{ row.win_trades }}</td>
-        <td>{{ row.lose_trades }}</td>
-<td>
-  {% if selected_account is none %}
-    <span class="empty">Select account</span>
-  {% else %}
-    <form method="post" action="{{ url_for('update_balance') }}" class="balance-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <input type="hidden" name="date" value="{{ row.date }}" />
-      <input type="hidden" name="year" value="{{ month_start.year }}" />
-      <input type="hidden" name="month" value="{{ month_start.month }}" />
-      <input type="hidden" name="account_id" value="{{ selected_account }}" />
+    <table id="month-daily-table">
+      <thead>
+        <tr>
+          <th class="sortable-date-header" data-sort-table="month-daily-table">
+            Date
+          </th>
+          <th># Options</th>
+          <th>Winning Trades</th>
+          <th>Losing Trades</th>
+          <th>Account Balance</th>
+          <th>PnL Before Fees</th>
+          <th>PnL With Fees</th>
+          <th>Running Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in daily_rows | reverse %}
+        <tr data-sort-date="{{ row.date }}">
+          <td>{{ row.date }}</td>
+          <td>{{ row.total_contracts }}</td>
+          <td>{{ row.win_trades }}</td>
+          <td>{{ row.lose_trades }}</td>
+          <td>
+            {% if selected_account is none %}
+            <span class="empty">Select account</span>
+            {% else %}
+            <form
+              method="post"
+              action="{{ url_for('update_balance') }}"
+              class="balance-form"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input type="hidden" name="date" value="{{ row.date }}" />
+              <input type="hidden" name="year" value="{{ month_start.year }}" />
+              <input
+                type="hidden"
+                name="month"
+                value="{{ month_start.month }}"
+              />
+              <input
+                type="hidden"
+                name="account_id"
+                value="{{ selected_account }}"
+              />
 
-      <div class="balance-view{% if row.balance is none %} is-hidden{% endif %}">
-        <span class="balance-amount">{{ row.balance | money if row.balance is not none else '' }}</span>
-        <button type="button" class="balance-edit btn-compact">
-          {{ 'Add' if row.balance is none else 'Edit' }}
-        </button>
-      </div>
+              <div
+                class="balance-view{% if row.balance is none %} is-hidden{% endif %}"
+              >
+                <span class="balance-amount"
+                  >{{ row.balance | money if row.balance is not none else ''
+                  }}</span
+                >
+                <button type="button" class="balance-edit btn-compact">
+                  {{ 'Add' if row.balance is none else 'Edit' }}
+                </button>
+              </div>
 
-      <div class="balance-edit-row{% if row.balance is not none %} is-hidden{% endif %}">
-        <input type="number" name="balance" step="0.01" min="0"
-               value="{{ row.balance if row.balance is not none else '' }}" required />
-        <button type="submit" class="save-btn btn-compact"><i class="fa-solid fa-floppy-disk btn-icon"></i>Save</button>
-        <button type="button" class="cancel-edit btn-compact"><i class="fa-solid fa-xmark btn-icon"></i>Cancel</button>
-      </div>
-    </form>
-  {% endif %}
-</td>        <td class="{% if row.pnl_before < 0 %}negative{% endif %}">{{ row.pnl_before | money }}</td>
-        <td class="{% if row.pnl_after < 0 %}negative{% endif %}">{{ row.pnl_after | money }}</td>
-        <td class="{% if row.running_total < 0 %}negative{% endif %}">{{ row.running_total | money }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-    {% if selected_account is none %}
+              <div
+                class="balance-edit-row{% if row.balance is not none %} is-hidden{% endif %}"
+              >
+                <input
+                  type="number"
+                  name="balance"
+                  step="0.01"
+                  min="0"
+                  value="{{ row.balance if row.balance is not none else '' }}"
+                  required
+                />
+                <button type="submit" class="save-btn btn-compact">
+                  <i class="fa-solid fa-floppy-disk btn-icon"></i>Save
+                </button>
+                <button type="button" class="cancel-edit btn-compact">
+                  <i class="fa-solid fa-xmark btn-icon"></i>Cancel
+                </button>
+              </div>
+            </form>
+            {% endif %}
+          </td>
+          <td class="{% if row.pnl_before < 0 %}negative{% endif %}">
+            {{ row.pnl_before | money }}
+          </td>
+          <td class="{% if row.pnl_after < 0 %}negative{% endif %}">
+            {{ row.pnl_after | money }}
+          </td>
+          <td class="{% if row.running_total < 0 %}negative{% endif %}">
+            {{ row.running_total | money }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %} {% if selected_account is none %}
     <p class="empty">No closed trades for this month.</p>
     {% else %}
     <table>
@@ -147,13 +220,38 @@
           <td>0</td>
           <td>0</td>
           <td>
-            <form method="post" action="{{ url_for('update_balance') }}" class="balance-form" id="balance-empty">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <form
+              method="post"
+              action="{{ url_for('update_balance') }}"
+              class="balance-form"
+              id="balance-empty"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
               <input type="hidden" name="year" value="{{ month_start.year }}" />
-              <input type="hidden" name="month" value="{{ month_start.month }}" />
-              <input type="hidden" name="account_id" value="{{ selected_account }}" />
-              <input type="number" name="balance" min="0" step="0.01" required />
-              <button type="submit" class="btn-compact"><i class="fa-solid fa-floppy-disk btn-icon"></i>Save</button>
+              <input
+                type="hidden"
+                name="month"
+                value="{{ month_start.month }}"
+              />
+              <input
+                type="hidden"
+                name="account_id"
+                value="{{ selected_account }}"
+              />
+              <input
+                type="number"
+                name="balance"
+                min="0"
+                step="0.01"
+                required
+              />
+              <button type="submit" class="btn-compact">
+                <i class="fa-solid fa-floppy-disk btn-icon"></i>Save
+              </button>
             </form>
           </td>
           <td>{{ 0 | money }}</td>
@@ -162,10 +260,9 @@
         </tr>
       </tbody>
     </table>
-    {% endif %}
-  {% endif %}
+    {% endif %} {% endif %}
   </div>
-  
+
   <!-- Calendar View -->
   {% if daily_rows or (not daily_rows and not selected_account) %}
   <div class="calendar-view" id="summary-view-calendar">
@@ -179,90 +276,89 @@
         <div>Week PnL</div>
       </div>
       <div class="calendar-days">
-        {% set first_day_weekday = month_start.weekday() %}
-        {% if month_start.month == 12 %}
-          {% set next_month_start = date(month_start.year + 1, 1, 1) %}
-        {% else %}
-          {% set next_month_start = date(month_start.year, month_start.month + 1, 1) %}
-        {% endif %}
-        {% set days_in_month = (next_month_start - month_start).days %}
-        {% set ns = namespace(week_pnl=0, week_has_data=false) %}
-        
+        {% set first_day_weekday = month_start.weekday() %} {% if
+        month_start.month == 12 %} {% set next_month_start =
+        date(month_start.year + 1, 1, 1) %} {% else %} {% set next_month_start =
+        date(month_start.year, month_start.month + 1, 1) %} {% endif %} {% set
+        days_in_month = (next_month_start - month_start).days %} {% set ns =
+        namespace(week_pnl=0, week_has_data=false) %}
+
         <!-- Empty cells before first day -->
-        {% set leading_empties = first_day_weekday if first_day_weekday < 5 else 5 %}
-        {% for i in range(leading_empties) %}
+        {% set leading_empties = first_day_weekday if first_day_weekday < 5 else
+        5 %} {% for i in range(leading_empties) %}
         <div class="calendar-day empty"></div>
-        {% endfor %}
-        {% if first_day_weekday >= 5 %}
+        {% endfor %} {% if first_day_weekday >= 5 %}
         <div class="calendar-week">
           <div class="week-label">Week</div>
           <div class="day-pnl empty">-</div>
         </div>
         {% endif %}
-        
+
         <!-- Days of month -->
-        {% for day in range(1, days_in_month + 1) %}
-          {% set day_str = "%02d" | format(day) %}
-          {% set day_date = month_start.strftime("%Y-%m-") ~ day_str %}
-          {% set day_data = daily_dict.get(day_date) %}
-          {% set day_index = (first_day_weekday + day - 1) % 7 %}
-          {% if day_index < 5 %}
-            {% if day_data %}
-              {% set ns.week_pnl = ns.week_pnl + day_data.pnl_after %}
-              {% set ns.week_has_data = true %}
-            {% endif %}
-              <div class="calendar-day {% if day_data %}has-trades {% if day_data.pnl_after < 0 %}negative{% elif day_data.pnl_after > 0 %}positive{% endif %}{% endif %}"
-                data-date="{{ day_date }}"
-                data-trades="{{ day_data.trade_count if day_data else 0 }}"
-                data-options="{{ day_data.total_contracts if day_data else 0 }}"
-                data-wins="{{ day_data.win_trades if day_data else 0 }}"
-                data-losses="{{ day_data.lose_trades if day_data else 0 }}"
-                data-winning-pnl="{{ day_data.winning_pnl if day_data else 0 }}"
-                data-losing-pnl="{{ day_data.losing_pnl if day_data else 0 }}"
-                data-balance="{{ day_data.balance if day_data and day_data.balance is not none else '' }}"
-                data-pnl-before="{{ day_data.pnl_before if day_data else 0 }}"
-                data-fees="{{ day_data.fees if day_data else 0 }}"
-                data-pnl-after="{{ day_data.pnl_after if day_data else 0 }}">
-              <div class="day-number">{{ day }}</div>
-              {% if day_data %}
-              <div class="day-trades">{{ day_data.win_trades + day_data.lose_trades }} trades</div>
-              <div class="day-pnl">{{ day_data.pnl_after | money }}</div>
-              {% endif %}
-            </div>
-            {% if day_index == 4 %}
-            <div class="calendar-week {% if ns.week_has_data %}{% if ns.week_pnl < 0 %}negative{% elif ns.week_pnl > 0 %}positive{% endif %}{% endif %}">
-              <div class="week-label">Week</div>
-              {% if ns.week_has_data %}
-              <div class="day-pnl">{{ ns.week_pnl | money }}</div>
-              {% else %}
-              <div class="day-pnl empty">-</div>
-              {% endif %}
-            </div>
-            {% set ns.week_pnl = 0 %}
-            {% set ns.week_has_data = false %}
-            {% endif %}
-          {% endif %}
-        {% endfor %}
-        {% set last_day_index = (first_day_weekday + days_in_month - 1) % 7 %}
-        {% if last_day_index < 4 %}
-          {% for i in range(last_day_index + 1, 5) %}
-          <div class="calendar-day empty"></div>
-          {% endfor %}
-          <div class="calendar-week {% if ns.week_has_data %}{% if ns.week_pnl < 0 %}negative{% elif ns.week_pnl > 0 %}positive{% endif %}{% endif %}">
-            <div class="week-label">Week</div>
-            {% if ns.week_has_data %}
-            <div class="day-pnl">{{ ns.week_pnl | money }}</div>
-            {% else %}
-            <div class="day-pnl empty">-</div>
-            {% endif %}
+        {% for day in range(1, days_in_month + 1) %} {% set day_str = "%02d" |
+        format(day) %} {% set day_date = month_start.strftime("%Y-%m-") ~
+        day_str %} {% set day_data = daily_dict.get(day_date) %} {% set
+        day_index = (first_day_weekday + day - 1) % 7 %} {% if day_index < 5 %}
+        {% if day_data %} {% set ns.week_pnl = ns.week_pnl + day_data.pnl_after
+        %} {% set ns.week_has_data = true %} {% endif %}
+        <div
+          class="calendar-day {% if day_data %}has-trades {% if day_data.pnl_after < 0 %}negative{% elif day_data.pnl_after > 0 %}positive{% endif %}{% endif %}"
+          data-date="{{ day_date }}"
+          data-trades="{{ day_data.trade_count if day_data else 0 }}"
+          data-options="{{ day_data.total_contracts if day_data else 0 }}"
+          data-wins="{{ day_data.win_trades if day_data else 0 }}"
+          data-losses="{{ day_data.lose_trades if day_data else 0 }}"
+          data-winning-pnl="{{ day_data.winning_pnl if day_data else 0 }}"
+          data-losing-pnl="{{ day_data.losing_pnl if day_data else 0 }}"
+          data-balance="{{ day_data.balance if day_data and day_data.balance is not none else '' }}"
+          data-pnl-before="{{ day_data.pnl_before if day_data else 0 }}"
+          data-fees="{{ day_data.fees if day_data else 0 }}"
+          data-pnl-after="{{ day_data.pnl_after if day_data else 0 }}"
+        >
+          <div class="day-number">{{ day }}</div>
+          {% if day_data %}
+          <div class="day-trades">
+            {{ day_data.win_trades + day_data.lose_trades }} trades
           </div>
+          <div class="day-pnl">{{ day_data.pnl_after | money }}</div>
+          {% endif %}
+        </div>
+        {% if day_index == 4 %}
+        <div
+          class="calendar-week {% if ns.week_has_data %}{% if ns.week_pnl < 0 %}negative{% elif ns.week_pnl > 0 %}positive{% endif %}{% endif %}"
+        >
+          <div class="week-label">Week</div>
+          {% if ns.week_has_data %}
+          <div class="day-pnl">{{ ns.week_pnl | money }}</div>
+          {% else %}
+          <div class="day-pnl empty">-</div>
+          {% endif %}
+        </div>
+        {% set ns.week_pnl = 0 %} {% set ns.week_has_data = false %} {% endif %}
+        {% endif %} {% endfor %} {% set last_day_index = (first_day_weekday +
+        days_in_month - 1) % 7 %} {% if last_day_index < 4 %} {% for i in
+        range(last_day_index + 1, 5) %}
+        <div class="calendar-day empty"></div>
+        {% endfor %}
+        <div
+          class="calendar-week {% if ns.week_has_data %}{% if ns.week_pnl < 0 %}negative{% elif ns.week_pnl > 0 %}positive{% endif %}{% endif %}"
+        >
+          <div class="week-label">Week</div>
+          {% if ns.week_has_data %}
+          <div class="day-pnl">{{ ns.week_pnl | money }}</div>
+          {% else %}
+          <div class="day-pnl empty">-</div>
+          {% endif %}
+        </div>
         {% endif %}
       </div>
 
       <div class="calendar-day-summary" id="calendar-day-summary">
         <div class="calendar-day-summary-header">
           <h3 id="calendar-day-summary-title">Select a date</h3>
-          <p id="calendar-day-summary-subtitle">Click any weekday on the calendar to view the daily breakdown.</p>
+          <p id="calendar-day-summary-subtitle">
+            Click any weekday on the calendar to view the daily breakdown.
+          </p>
         </div>
         <div class="calendar-day-summary-grid">
           <div class="summary-metric">
@@ -294,82 +390,184 @@
             <strong id="summary-pnl-after" class="neutral">$0.00</strong>
           </div>
         </div>
-        <div style="margin-top:0.75rem;">
-          <button id="calendar-journal-btn" class="btn-compact" style="display:none;" onclick="openJournalDrawer(this.getAttribute('data-date'))">
+        <div style="margin-top: 0.75rem">
+          <button
+            id="calendar-journal-btn"
+            class="btn-compact"
+            style="display: none"
+            onclick="openJournalDrawer(this.getAttribute('data-date'))"
+          >
             <i class="fa-solid fa-book-open"></i> View Journal
           </button>
         </div>
       </div>
-
     </div>
   </div>
   {% endif %}
 </section>
 
 <!-- Journal Drawer -->
-<div id="journal-drawer-backdrop" onclick="closeJournalDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:900;backdrop-filter:blur(2px);transition:opacity 0.2s;"></div>
-<div id="journal-drawer" style="display:none;position:fixed;top:0;right:0;height:100%;width:min(420px,100vw);background:var(--panel);box-shadow:-4px 0 32px rgba(0,0,0,0.18);z-index:901;flex-direction:column;transition:transform 0.3s cubic-bezier(.4,0,.2,1);transform:translateX(100%);">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0.75rem;border-bottom:1px solid var(--border);">
+<div
+  id="journal-drawer-backdrop"
+  onclick="closeJournalDrawer()"
+  style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 900;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.2s;
+  "
+></div>
+<div
+  id="journal-drawer"
+  style="
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(420px, 100vw);
+    background: var(--panel);
+    box-shadow: -4px 0 32px rgba(0, 0, 0, 0.18);
+    z-index: 901;
+    flex-direction: column;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(100%);
+  "
+>
+  <div
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    "
+  >
     <div>
-      <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;opacity:0.5;margin-bottom:0.2rem;">Journal</div>
-      <h3 id="journal-drawer-date" style="margin:0;font-size:1.1rem;">—</h3>
+      <div
+        style="
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          opacity: 0.5;
+          margin-bottom: 0.2rem;
+        "
+      >
+        Journal
+      </div>
+      <h3 id="journal-drawer-date" style="margin: 0; font-size: 1.1rem">—</h3>
     </div>
-    <div style="display:flex;gap:0.5rem;align-items:center;">
-      <a id="journal-drawer-add" href="/journal" style="font-size:0.8rem;padding:0.35rem 0.75rem;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;display:inline-flex;align-items:center;gap:0.35rem;"><i class="fa-solid fa-plus"></i> Add Entry</a>
-      <button onclick="closeJournalDrawer()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--ink);opacity:0.6;padding:0.25rem 0.4rem;border-radius:4px;" title="Close">&times;</button>
+    <div style="display: flex; gap: 0.5rem; align-items: center">
+      <a
+        id="journal-drawer-add"
+        href="/journal"
+        style="
+          font-size: 0.8rem;
+          padding: 0.35rem 0.75rem;
+          background: var(--accent);
+          color: #fff;
+          border-radius: 6px;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+        "
+        ><i class="fa-solid fa-plus"></i> Add Entry</a
+      >
+      <button
+        onclick="closeJournalDrawer()"
+        style="
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 1.2rem;
+          color: var(--ink);
+          opacity: 0.6;
+          padding: 0.25rem 0.4rem;
+          border-radius: 4px;
+        "
+        title="Close"
+      >
+        &times;
+      </button>
     </div>
   </div>
-  <div id="calendar-journal-entries" style="flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:0.75rem;"><em>Loading...</em></div>
+  <div
+    id="calendar-journal-entries"
+    style="
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    "
+  >
+    <em>Loading...</em>
+  </div>
 </div>
 
 <section class="panel" id="today-trades">
-    <h2>Today's Trades</h2>
+  <h2>Today's Trades</h2>
   <div class="section-content">
-  {% if today_trade_rows %}
-  <table id="month-today-trade-table">
-    <thead>
-      <tr>
-        <th class="sortable-date-header" data-sort-table="month-today-trade-table">Date</th>
-        <th>Trade ID</th>
-        <th>Account</th>
-        <th>Symbol</th>
-        <th>C/P</th>
-        <th># Opt</th>
-        <th>Avg Buy</th>
-        <th>Avg Sell</th>
-        <th>PnL</th>
-        <th>%</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in today_trade_rows %}
-      {% set trade_dt = row.trade.created_at or row.trade.closed_at %}
-      <tr title="{{ row.trade.notes or 'No comment' }}" data-sort-date="{{ trade_dt }}">
-        <td>
-          {% if trade_dt and trade_dt|length >= 16 %}
-            {{ trade_dt[5:10] }} {{ trade_dt[11:16] }}
-          {% elif trade_dt and trade_dt|length >= 10 %}
-            {{ trade_dt[5:10] }} 00:00
-          {% else %}
-            {{ trade_dt }}
-          {% endif %}
-        </td>
-        <td>{{ row.trade.trade_code }}</td>
-        <td>{{ row.trade.account_short or 'Unassigned' }}</td>
-        <td>{{ row.trade.symbol }}</td>
-        <td>{{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}</td>
-        <td>{{ row.stats.total_contracts }}</td>
-        <td>{{ row.stats.avg_buy | money }}</td>
-        <td>{{ row.stats.avg_sell | money }}</td>
-        <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">{{ row.stats.pnl_before | money }}</td>
-        <td class="{% if row.stats.percent < 0 %}negative{% endif %}">{{ row.stats.percent | pct }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="empty">No trades to summarize yet.</p>
-  {% endif %}
+    {% if today_trade_rows %}
+    <table id="month-today-trade-table">
+      <thead>
+        <tr>
+          <th
+            class="sortable-date-header"
+            data-sort-table="month-today-trade-table"
+          >
+            Date
+          </th>
+          <th>Trade ID</th>
+          <th>Account</th>
+          <th>Symbol</th>
+          <th>C/P</th>
+          <th># Opt</th>
+          <th>Avg Buy</th>
+          <th>Avg Sell</th>
+          <th>PnL</th>
+          <th>%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in today_trade_rows %} {% set trade_dt = row.trade.created_at
+        or row.trade.closed_at %}
+        <tr
+          title="{{ row.trade.notes or 'No comment' }}"
+          data-sort-date="{{ trade_dt }}"
+        >
+          <td>
+            {% if trade_dt and trade_dt|length >= 16 %} {{ trade_dt[5:10] }} {{
+            trade_dt[11:16] }} {% elif trade_dt and trade_dt|length >= 10 %} {{
+            trade_dt[5:10] }} 00:00 {% else %} {{ trade_dt }} {% endif %}
+          </td>
+          <td>{{ row.trade.trade_code }}</td>
+          <td>{{ row.trade.account_short or 'Unassigned' }}</td>
+          <td>{{ row.trade.symbol }}</td>
+          <td>
+            {{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}
+          </td>
+          <td>{{ row.stats.total_contracts }}</td>
+          <td>{{ row.stats.avg_buy | money }}</td>
+          <td>{{ row.stats.avg_sell | money }}</td>
+          <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">
+            {{ row.stats.pnl_before | money }}
+          </td>
+          <td class="{% if row.stats.percent < 0 %}negative{% endif %}">
+            {{ row.stats.percent | pct }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No trades to summarize yet.</p>
+    {% endif %}
   </div>
 </section>
 
@@ -378,430 +576,465 @@
     <h2>Trades Summary</h2>
   </button>
   <div class="section-content is-hidden">
-  {% if trade_rows %}
-  <table id="month-trade-table">
-    <thead>
-      <tr>
-        <th class="sortable-date-header" data-sort-table="month-trade-table">Date</th>
-        <th>Trade ID</th>
-        <th>Account</th>
-        <th>Symbol</th>
-        <th>C/P</th>
-        <th># Opt</th>
-        <th>Avg Buy</th>
-        <th>Avg Sell</th>
-        <th>PnL</th>
-        <th>%</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in trade_rows %}
-      {% set trade_dt = row.trade.created_at or row.trade.closed_at %}
-      <tr class="trade-summary-row" title="{{ row.trade.notes or 'No comment' }}" data-sort-date="{{ trade_dt }}">
-        <td>
-          {% if trade_dt and trade_dt|length >= 16 %}
-            {{ trade_dt[5:10] }} {{ trade_dt[11:16] }}
-          {% elif trade_dt and trade_dt|length >= 10 %}
-            {{ trade_dt[5:10] }} 00:00
-          {% else %}
-            {{ trade_dt }}
-          {% endif %}
-        </td>
-        <td>{{ row.trade.trade_code }}</td>
-        <td>{{ row.trade.account_short or 'Unassigned' }}</td>
-        <td>{{ row.trade.symbol }}</td>
-        <td>{{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}</td>
-        <td>{{ row.stats.total_contracts }}</td>
-        <td>{{ row.stats.avg_buy | money }}</td>
-        <td>{{ row.stats.avg_sell | money }}</td>
-        <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">{{ row.stats.pnl_before | money }}</td>
-        <td class="{% if row.stats.percent < 0 %}negative{% endif %}">{{ row.stats.percent | pct }}</td>
-        <td>
-          <form method="post" action="{{ url_for('delete_trade', trade_id=row.trade.id) }}" onsubmit="return window.confirm('Delete this trade and all its entries?')">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="return_view" value="month" />
-            <input type="hidden" name="return_year" value="{{ month_start.year }}" />
-            <input type="hidden" name="return_month" value="{{ month_start.month }}" />
-            <input type="hidden" name="return_account" value="{{ selected_account if selected_account is not none else '' }}" />
-            <button type="submit" class="danger summary-delete-action btn-compact"><i class="fa-solid fa-trash btn-icon"></i>Delete</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="empty">No trades to summarize yet.</p>
-  {% endif %}
+    {% if trade_rows %}
+    <table id="month-trade-table">
+      <thead>
+        <tr>
+          <th class="sortable-date-header" data-sort-table="month-trade-table">
+            Date
+          </th>
+          <th>Trade ID</th>
+          <th>Account</th>
+          <th>Symbol</th>
+          <th>C/P</th>
+          <th># Opt</th>
+          <th>Avg Buy</th>
+          <th>Avg Sell</th>
+          <th>PnL</th>
+          <th>%</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in trade_rows %} {% set trade_dt = row.trade.created_at or
+        row.trade.closed_at %}
+        <tr
+          class="trade-summary-row"
+          title="{{ row.trade.notes or 'No comment' }}"
+          data-sort-date="{{ trade_dt }}"
+        >
+          <td>
+            {% if trade_dt and trade_dt|length >= 16 %} {{ trade_dt[5:10] }} {{
+            trade_dt[11:16] }} {% elif trade_dt and trade_dt|length >= 10 %} {{
+            trade_dt[5:10] }} 00:00 {% else %} {{ trade_dt }} {% endif %}
+          </td>
+          <td>{{ row.trade.trade_code }}</td>
+          <td>{{ row.trade.account_short or 'Unassigned' }}</td>
+          <td>{{ row.trade.symbol }}</td>
+          <td>
+            {{ 'P' if (row.trade.option_type or 'CALL') == 'PUT' else 'C' }}
+          </td>
+          <td>{{ row.stats.total_contracts }}</td>
+          <td>{{ row.stats.avg_buy | money }}</td>
+          <td>{{ row.stats.avg_sell | money }}</td>
+          <td class="{% if row.stats.pnl_before < 0 %}negative{% endif %}">
+            {{ row.stats.pnl_before | money }}
+          </td>
+          <td class="{% if row.stats.percent < 0 %}negative{% endif %}">
+            {{ row.stats.percent | pct }}
+          </td>
+          <td>
+            <form
+              method="post"
+              action="{{ url_for('delete_trade', trade_id=row.trade.id) }}"
+              onsubmit="
+                return window.confirm('Delete this trade and all its entries?');
+              "
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input type="hidden" name="return_view" value="month" />
+              <input
+                type="hidden"
+                name="return_year"
+                value="{{ month_start.year }}"
+              />
+              <input
+                type="hidden"
+                name="return_month"
+                value="{{ month_start.month }}"
+              />
+              <input
+                type="hidden"
+                name="return_account"
+                value="{{ selected_account if selected_account is not none else '' }}"
+              />
+              <button
+                type="submit"
+                class="danger summary-delete-action btn-compact"
+              >
+                <i class="fa-solid fa-trash btn-icon"></i>Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No trades to summarize yet.</p>
+    {% endif %}
   </div>
 </section>
 
 <script>
-  (function setupBalanceEdit() {
-    var forms = document.querySelectorAll(".balance-form");
+    (function setupBalanceEdit() {
+      var forms = document.querySelectorAll(".balance-form");
 
-    forms.forEach(function (form) {
-      var viewRow = form.querySelector(".balance-view");
-      var editRow = form.querySelector(".balance-edit-row");
-      var editButton = form.querySelector(".balance-edit");
-      var cancelButton = form.querySelector(".cancel-edit");
-      var input = form.querySelector("input[name='balance']");
-      var initialValue = input ? input.value : "";
+      forms.forEach(function (form) {
+        var viewRow = form.querySelector(".balance-view");
+        var editRow = form.querySelector(".balance-edit-row");
+        var editButton = form.querySelector(".balance-edit");
+        var cancelButton = form.querySelector(".cancel-edit");
+        var input = form.querySelector("input[name='balance']");
+        var initialValue = input ? input.value : "";
 
-      function openEdit() {
-        if (viewRow) {
-          viewRow.classList.add("is-hidden");
-        }
-        if (editRow) {
-          editRow.classList.remove("is-hidden");
-        }
-        if (input) {
-          input.focus();
-          input.select();
-        }
-      }
-
-      function closeEdit() {
-        if (editRow) {
-          editRow.classList.add("is-hidden");
-        }
-        if (viewRow) {
-          viewRow.classList.remove("is-hidden");
-        }
-      }
-
-      if (editButton) {
-        editButton.addEventListener("click", function (event) {
-          event.preventDefault();
-          openEdit();
-        });
-      }
-
-      if (cancelButton) {
-        cancelButton.addEventListener("click", function (event) {
-          event.preventDefault();
-          if (input) {
-            input.value = initialValue;
+        function openEdit() {
+          if (viewRow) {
+            viewRow.classList.add("is-hidden");
           }
-          closeEdit();
+          if (editRow) {
+            editRow.classList.remove("is-hidden");
+          }
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        }
+
+        function closeEdit() {
+          if (editRow) {
+            editRow.classList.add("is-hidden");
+          }
+          if (viewRow) {
+            viewRow.classList.remove("is-hidden");
+          }
+        }
+
+        if (editButton) {
+          editButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            openEdit();
+          });
+        }
+
+        if (cancelButton) {
+          cancelButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            if (input) {
+              input.value = initialValue;
+            }
+            closeEdit();
+          });
+        }
+      });
+    })();
+
+    (function setupMonthNav() {
+      var monthSelect = document.getElementById("month-select");
+      var accountSelect = document.getElementById("month-account-select");
+      if (!monthSelect) {
+        return;
+      }
+      var year = {{ month_start.year }};
+
+      function navigate() {
+        var month = monthSelect.value;
+        var account = accountSelect ? accountSelect.value : "ALL";
+        var url = "/month/" + year + "/" + month;
+        url += "?account=" + encodeURIComponent(account || "ALL");
+        window.location.href = url;
+      }
+
+      monthSelect.addEventListener("change", navigate);
+      if (accountSelect) {
+        accountSelect.addEventListener("change", navigate);
+      }
+    })();
+
+  (function setupSummaryToggle() {
+      var toggleBtn = document.querySelector('[data-toggle="summary-view"]');
+      var tableView  = document.getElementById("summary-view-table");
+      var calendarView = document.getElementById("summary-view-calendar");
+
+      if (!toggleBtn || !tableView || !calendarView) return;
+
+      toggleBtn.addEventListener("click", function () {
+        var current = toggleBtn.getAttribute("data-value");
+        if (current === "table") {
+          tableView.classList.add("is-hidden");
+          calendarView.classList.remove("is-hidden");
+          toggleBtn.setAttribute("data-value", "calendar");
+          toggleBtn.textContent = "Table";
+        } else {
+          tableView.classList.remove("is-hidden");
+          calendarView.classList.add("is-hidden");
+          toggleBtn.setAttribute("data-value", "table");
+          toggleBtn.textContent = "Calendar";
+        }
+      });
+    })();
+
+    (function setupDateSorting() {
+      function sortTableByDate(tableId) {
+        var table = document.getElementById(tableId);
+        if (!table) {
+          return;
+        }
+        var tbody = table.querySelector("tbody");
+        if (!tbody) {
+          return;
+        }
+
+        var rows = Array.from(tbody.querySelectorAll("tr"));
+        var currentDir = table.getAttribute("data-sort-dir") || "desc";
+        var nextDir = currentDir === "asc" ? "desc" : "asc";
+
+        rows.sort(function (a, b) {
+          var aDate = a.getAttribute("data-sort-date") || "";
+          var bDate = b.getAttribute("data-sort-date") || "";
+          return nextDir === "asc" ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
         });
+
+        rows.forEach(function (row) {
+          tbody.appendChild(row);
+        });
+
+        table.setAttribute("data-sort-dir", nextDir);
       }
-    });
-  })();
 
-  (function setupMonthNav() {
-    var monthSelect = document.getElementById("month-select");
-    var accountSelect = document.getElementById("month-account-select");
-    if (!monthSelect) {
-      return;
-    }
-    var year = {{ month_start.year }};
+      var headers = document.querySelectorAll(".sortable-date-header[data-sort-table]");
+      headers.forEach(function (header) {
+        header.addEventListener("click", function () {
+          var tableId = header.getAttribute("data-sort-table");
+          if (!tableId) {
+            return;
+          }
+          sortTableByDate(tableId);
+        });
+      });
+    })();
 
-    function navigate() {
-      var month = monthSelect.value;
-      var account = accountSelect ? accountSelect.value : "ALL";
-      var url = "/month/" + year + "/" + month;
-      url += "?account=" + encodeURIComponent(account || "ALL");
-      window.location.href = url;
-    }
+    (function enableCollapsibleSections() {
+      var toggles = document.querySelectorAll(".section-toggle");
+      toggles.forEach(function (toggle) {
+        var sectionId = toggle.getAttribute("data-section");
+        var section = document.getElementById(sectionId);
+        var content = section ? section.querySelector(".section-content") : null;
 
-    monthSelect.addEventListener("change", navigate);
-    if (accountSelect) {
-      accountSelect.addEventListener("change", navigate);
-    }
-  })();
+        if (!content) {
+          return;
+        }
 
-(function setupSummaryToggle() {
-    var toggleBtn = document.querySelector('[data-toggle="summary-view"]');
-    var tableView  = document.getElementById("summary-view-table");
-    var calendarView = document.getElementById("summary-view-calendar");
+        // Mark as collapsed initially since content has is-hidden
+        if (content.classList.contains("is-hidden")) {
+          toggle.classList.add("is-collapsed");
+        }
 
-    if (!toggleBtn || !tableView || !calendarView) return;
+        toggle.addEventListener("click", function (event) {
+          event.preventDefault();
+          content.classList.toggle("is-hidden");
+          toggle.classList.toggle("is-collapsed");
+        });
+      });
+    })();
 
-    toggleBtn.addEventListener("click", function () {
-      var current = toggleBtn.getAttribute("data-value");
-      if (current === "table") {
-        tableView.classList.add("is-hidden");
-        calendarView.classList.remove("is-hidden");
-        toggleBtn.setAttribute("data-value", "calendar");
-        toggleBtn.textContent = "Table";
-      } else {
-        tableView.classList.remove("is-hidden");
-        calendarView.classList.add("is-hidden");
-        toggleBtn.setAttribute("data-value", "table");
-        toggleBtn.textContent = "Calendar";
-      }
-    });
-  })();
-
-  (function setupDateSorting() {
-    function sortTableByDate(tableId) {
-      var table = document.getElementById(tableId);
+    (function enableTradeSummaryDeleteToggle() {
+      var table = document.getElementById("month-trade-table");
       if (!table) {
         return;
       }
-      var tbody = table.querySelector("tbody");
-      if (!tbody) {
+
+      var rows = Array.from(table.querySelectorAll("tbody .trade-summary-row"));
+      if (!rows.length) {
         return;
       }
-
-      var rows = Array.from(tbody.querySelectorAll("tr"));
-      var currentDir = table.getAttribute("data-sort-dir") || "desc";
-      var nextDir = currentDir === "asc" ? "desc" : "asc";
-
-      rows.sort(function (a, b) {
-        var aDate = a.getAttribute("data-sort-date") || "";
-        var bDate = b.getAttribute("data-sort-date") || "";
-        return nextDir === "asc" ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
-      });
 
       rows.forEach(function (row) {
-        tbody.appendChild(row);
+        row.addEventListener("click", function (event) {
+          if (event.target.closest("button") || event.target.closest("form") || event.target.closest("a")) {
+            return;
+          }
+
+          rows.forEach(function (otherRow) {
+            if (otherRow !== row) {
+              otherRow.classList.remove("is-active");
+            }
+          });
+
+          row.classList.toggle("is-active");
+        });
       });
+    })();
 
-      table.setAttribute("data-sort-dir", nextDir);
-    }
-
-    var headers = document.querySelectorAll(".sortable-date-header[data-sort-table]");
-    headers.forEach(function (header) {
-      header.addEventListener("click", function () {
-        var tableId = header.getAttribute("data-sort-table");
-        if (!tableId) {
-          return;
-        }
-        sortTableByDate(tableId);
-      });
-    });
-  })();
-
-  (function enableCollapsibleSections() {
-    var toggles = document.querySelectorAll(".section-toggle");
-    toggles.forEach(function (toggle) {
-      var sectionId = toggle.getAttribute("data-section");
-      var section = document.getElementById(sectionId);
-      var content = section ? section.querySelector(".section-content") : null;
-
-      if (!content) {
+    (function setupCalendarDaySummary() {
+      var days = document.querySelectorAll(".calendar-day[data-date]");
+      var summary = document.getElementById("calendar-day-summary");
+      if (!days.length || !summary) {
         return;
       }
 
-      // Mark as collapsed initially since content has is-hidden
-      if (content.classList.contains("is-hidden")) {
-        toggle.classList.add("is-collapsed");
+      var titleEl = document.getElementById("calendar-day-summary-title");
+      var subtitleEl = document.getElementById("calendar-day-summary-subtitle");
+      var tradesEl = document.getElementById("summary-trades");
+      var optionsEl = document.getElementById("summary-options");
+      var winLossEl = document.getElementById("summary-win-loss");
+      var winningPnlEl = document.getElementById("summary-winning-pnl");
+      var losingPnlEl = document.getElementById("summary-losing-pnl");
+      var feesEl = document.getElementById("summary-fees");
+      var pnlAfterEl = document.getElementById("summary-pnl-after");
+
+      function money(value) {
+        var numeric = Number(value || 0);
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(numeric);
       }
 
-      toggle.addEventListener("click", function (event) {
-        event.preventDefault();
-        content.classList.toggle("is-hidden");
-        toggle.classList.toggle("is-collapsed");
-      });
-    });
-  })();
+      function applyPnlClass(element, value) {
+        var numeric = Number(value || 0);
+        element.classList.remove("positive", "negative", "neutral");
+        if (numeric > 0) {
+          element.classList.add("positive");
+        } else if (numeric < 0) {
+          element.classList.add("negative");
+        } else {
+          element.classList.add("neutral");
+        }
+      }
 
-  (function enableTradeSummaryDeleteToggle() {
-    var table = document.getElementById("month-trade-table");
-    if (!table) {
-      return;
-    }
-
-    var rows = Array.from(table.querySelectorAll("tbody .trade-summary-row"));
-    if (!rows.length) {
-      return;
-    }
-
-    rows.forEach(function (row) {
-      row.addEventListener("click", function (event) {
-        if (event.target.closest("button") || event.target.closest("form") || event.target.closest("a")) {
+      days.forEach(function (day) {
+        if (day.classList.contains("empty")) {
           return;
         }
 
-        rows.forEach(function (otherRow) {
-          if (otherRow !== row) {
-            otherRow.classList.remove("is-active");
+        day.addEventListener("click", function () {
+          days.forEach(function (item) {
+            item.classList.remove("is-selected");
+          });
+          day.classList.add("is-selected");
+
+          var date = day.getAttribute("data-date") || "";
+          var trades = Number(day.getAttribute("data-trades") || 0);
+          var options = Number(day.getAttribute("data-options") || 0);
+          var wins = Number(day.getAttribute("data-wins") || 0);
+          var losses = Number(day.getAttribute("data-losses") || 0);
+          var winningPnl = Number(day.getAttribute("data-winning-pnl") || 0);
+          var losingPnl = Number(day.getAttribute("data-losing-pnl") || 0);
+          var pnlBefore = Number(day.getAttribute("data-pnl-before") || 0);
+          var fees = Number(day.getAttribute("data-fees") || 0);
+          var pnlAfter = Number(day.getAttribute("data-pnl-after") || 0);
+
+          if (titleEl) {
+            titleEl.textContent = date;
+          }
+          if (subtitleEl) {
+            subtitleEl.textContent = trades > 0 ? "Daily trade performance" : "No closed trades for this date";
+          }
+          if (tradesEl) {
+            tradesEl.textContent = String(trades);
+          }
+          if (optionsEl) {
+            optionsEl.textContent = String(options);
+          }
+          if (winLossEl) {
+            winLossEl.textContent = String(wins) + " / " + String(losses);
+          }
+          if (winningPnlEl) {
+            winningPnlEl.textContent = money(winningPnl);
+            applyPnlClass(winningPnlEl, winningPnl);
+          }
+          if (losingPnlEl) {
+            losingPnlEl.textContent = money(losingPnl);
+            applyPnlClass(losingPnlEl, losingPnl);
+          }
+          if (feesEl) {
+            feesEl.textContent = money(fees);
+            feesEl.classList.remove("positive", "negative", "neutral");
+            feesEl.classList.add(fees > 0 ? "negative" : "neutral");
+          }
+          if (pnlAfterEl) {
+            pnlAfterEl.textContent = money(pnlAfter);
+            applyPnlClass(pnlAfterEl, pnlAfter);
+          }
+
+          var journalBtn = document.getElementById('calendar-journal-btn');
+          if (journalBtn) {
+            journalBtn.setAttribute('data-date', date);
+            journalBtn.style.display = 'inline-flex';
+            journalBtn.disabled = true;
+            journalBtn.title = 'Checking for journal entries...';
+            fetch('/journal/entries/' + date)
+              .then(function(r) { return r.json(); })
+              .then(function(entries) {
+                journalBtn.disabled = entries.length === 0;
+                journalBtn.title = entries.length === 0 ? 'No journal entries for this date' : 'View journal entries';
+              })
+              .catch(function() {
+                journalBtn.disabled = true;
+                journalBtn.title = 'Could not check journal entries';
+              });
           }
         });
-
-        row.classList.toggle("is-active");
       });
+    })();
+
+    function openJournalDrawer(date) {
+      var drawer = document.getElementById('journal-drawer');
+      var backdrop = document.getElementById('journal-drawer-backdrop');
+      var entriesEl = document.getElementById('calendar-journal-entries');
+      var dateEl = document.getElementById('journal-drawer-date');
+      if (!drawer) return;
+      if (dateEl) dateEl.textContent = date;
+      drawer.style.display = 'flex';
+      backdrop.style.display = 'block';
+      requestAnimationFrame(function() { drawer.style.transform = 'translateX(0)'; });
+      entriesEl.innerHTML = '<em style="opacity:0.5">Loading...</em>';
+      fetch('/journal/entries/' + date)
+        .then(function(r) { return r.json(); })
+        .then(function(entries) {
+          if (!entries.length) {
+            entriesEl.innerHTML = '<p style="opacity:0.5;text-align:center;margin-top:2rem;"><i class="fa-regular fa-note-sticky" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>No journal entries for this date.</p>';
+            return;
+          }
+          entriesEl.innerHTML = '';
+          entries.forEach(function(e) {
+            var card = document.createElement('div');
+            card.style.cssText = 'background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:0.875rem 1rem;';
+            var header = '';
+            if (e.trade_id) {
+              var pnlNum = Number(e.pnl || 0);
+              var pnlStr = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(pnlNum);
+              var pnlColor = pnlNum > 0 ? 'var(--positive)' : pnlNum < 0 ? 'var(--negative)' : 'inherit';
+              header += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap;">' +
+                '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;font-weight:600;background:var(--accent);color:#fff;border-radius:4px;padding:0.15rem 0.5rem;">' +
+                '<i class="fa-solid fa-link"></i> ' + (e.symbol || '') + ' ' + (e.option_type || '') + '</span>' +
+                '<span style="font-size:0.75rem;opacity:0.7;">' + (e.num_options || 0) + ' contracts</span>' +
+                '<span style="font-size:0.75rem;font-weight:600;color:' + pnlColor + ';">' + pnlStr + '</span>' +
+                '</div>';
+            }
+            if (e.tags) {
+              var pills = e.tags.split(',').map(function(t) {
+                return '<span style="font-size:0.7rem;background:var(--border);border-radius:20px;padding:0.1rem 0.5rem;margin-right:0.25rem;">' + t.trim() + '</span>';
+              }).join('');
+              header += '<div style="margin-bottom:0.4rem;">' + pills + '</div>';
+            }
+            card.innerHTML = header + '<p style="margin:0;line-height:1.55;">' + e.text + '</p>';
+            entriesEl.appendChild(card);
+          });
+        })
+        .catch(function() {
+          entriesEl.innerHTML = '<p style="color:var(--negative)">Failed to load journal entries.</p>';
+        });
+    }
+
+    function closeJournalDrawer() {
+      var drawer = document.getElementById('journal-drawer');
+      var backdrop = document.getElementById('journal-drawer-backdrop');
+      if (drawer) { drawer.style.transform = 'translateX(100%)'; setTimeout(function() { drawer.style.display = 'none'; }, 300); }
+      if (backdrop) { backdrop.style.display = 'none'; }
+    }
+
+    function openJournalPanel() { /* legacy stub */ }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeJournalDrawer();
     });
-  })();
-
-  (function setupCalendarDaySummary() {
-    var days = document.querySelectorAll(".calendar-day[data-date]");
-    var summary = document.getElementById("calendar-day-summary");
-    if (!days.length || !summary) {
-      return;
-    }
-
-    var titleEl = document.getElementById("calendar-day-summary-title");
-    var subtitleEl = document.getElementById("calendar-day-summary-subtitle");
-    var tradesEl = document.getElementById("summary-trades");
-    var optionsEl = document.getElementById("summary-options");
-    var winLossEl = document.getElementById("summary-win-loss");
-    var winningPnlEl = document.getElementById("summary-winning-pnl");
-    var losingPnlEl = document.getElementById("summary-losing-pnl");
-    var feesEl = document.getElementById("summary-fees");
-    var pnlAfterEl = document.getElementById("summary-pnl-after");
-
-    function money(value) {
-      var numeric = Number(value || 0);
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(numeric);
-    }
-
-    function applyPnlClass(element, value) {
-      var numeric = Number(value || 0);
-      element.classList.remove("positive", "negative", "neutral");
-      if (numeric > 0) {
-        element.classList.add("positive");
-      } else if (numeric < 0) {
-        element.classList.add("negative");
-      } else {
-        element.classList.add("neutral");
-      }
-    }
-
-    days.forEach(function (day) {
-      if (day.classList.contains("empty")) {
-        return;
-      }
-
-      day.addEventListener("click", function () {
-        days.forEach(function (item) {
-          item.classList.remove("is-selected");
-        });
-        day.classList.add("is-selected");
-
-        var date = day.getAttribute("data-date") || "";
-        var trades = Number(day.getAttribute("data-trades") || 0);
-        var options = Number(day.getAttribute("data-options") || 0);
-        var wins = Number(day.getAttribute("data-wins") || 0);
-        var losses = Number(day.getAttribute("data-losses") || 0);
-        var winningPnl = Number(day.getAttribute("data-winning-pnl") || 0);
-        var losingPnl = Number(day.getAttribute("data-losing-pnl") || 0);
-        var pnlBefore = Number(day.getAttribute("data-pnl-before") || 0);
-        var fees = Number(day.getAttribute("data-fees") || 0);
-        var pnlAfter = Number(day.getAttribute("data-pnl-after") || 0);
-
-        if (titleEl) {
-          titleEl.textContent = date;
-        }
-        if (subtitleEl) {
-          subtitleEl.textContent = trades > 0 ? "Daily trade performance" : "No closed trades for this date";
-        }
-        if (tradesEl) {
-          tradesEl.textContent = String(trades);
-        }
-        if (optionsEl) {
-          optionsEl.textContent = String(options);
-        }
-        if (winLossEl) {
-          winLossEl.textContent = String(wins) + " / " + String(losses);
-        }
-        if (winningPnlEl) {
-          winningPnlEl.textContent = money(winningPnl);
-          applyPnlClass(winningPnlEl, winningPnl);
-        }
-        if (losingPnlEl) {
-          losingPnlEl.textContent = money(losingPnl);
-          applyPnlClass(losingPnlEl, losingPnl);
-        }
-        if (feesEl) {
-          feesEl.textContent = money(fees);
-          feesEl.classList.remove("positive", "negative", "neutral");
-          feesEl.classList.add(fees > 0 ? "negative" : "neutral");
-        }
-        if (pnlAfterEl) {
-          pnlAfterEl.textContent = money(pnlAfter);
-          applyPnlClass(pnlAfterEl, pnlAfter);
-        }
-
-        var journalBtn = document.getElementById('calendar-journal-btn');
-        if (journalBtn) {
-          journalBtn.setAttribute('data-date', date);
-          journalBtn.style.display = 'inline-flex';
-          journalBtn.disabled = true;
-          journalBtn.title = 'Checking for journal entries...';
-          fetch('/journal/entries/' + date)
-            .then(function(r) { return r.json(); })
-            .then(function(entries) {
-              journalBtn.disabled = entries.length === 0;
-              journalBtn.title = entries.length === 0 ? 'No journal entries for this date' : 'View journal entries';
-            })
-            .catch(function() {
-              journalBtn.disabled = true;
-              journalBtn.title = 'Could not check journal entries';
-            });
-        }
-      });
-    });
-  })();
-
-  function openJournalDrawer(date) {
-    var drawer = document.getElementById('journal-drawer');
-    var backdrop = document.getElementById('journal-drawer-backdrop');
-    var entriesEl = document.getElementById('calendar-journal-entries');
-    var dateEl = document.getElementById('journal-drawer-date');
-    if (!drawer) return;
-    if (dateEl) dateEl.textContent = date;
-    drawer.style.display = 'flex';
-    backdrop.style.display = 'block';
-    requestAnimationFrame(function() { drawer.style.transform = 'translateX(0)'; });
-    entriesEl.innerHTML = '<em style="opacity:0.5">Loading...</em>';
-    fetch('/journal/entries/' + date)
-      .then(function(r) { return r.json(); })
-      .then(function(entries) {
-        if (!entries.length) {
-          entriesEl.innerHTML = '<p style="opacity:0.5;text-align:center;margin-top:2rem;"><i class="fa-regular fa-note-sticky" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>No journal entries for this date.</p>';
-          return;
-        }
-        entriesEl.innerHTML = '';
-        entries.forEach(function(e) {
-          var card = document.createElement('div');
-          card.style.cssText = 'background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:0.875rem 1rem;';
-          var header = '';
-          if (e.trade_id) {
-            var pnlNum = Number(e.pnl || 0);
-            var pnlStr = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(pnlNum);
-            var pnlColor = pnlNum > 0 ? 'var(--positive)' : pnlNum < 0 ? 'var(--negative)' : 'inherit';
-            header += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap;">' +
-              '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;font-weight:600;background:var(--accent);color:#fff;border-radius:4px;padding:0.15rem 0.5rem;">' +
-              '<i class="fa-solid fa-link"></i> ' + (e.symbol || '') + ' ' + (e.option_type || '') + '</span>' +
-              '<span style="font-size:0.75rem;opacity:0.7;">' + (e.num_options || 0) + ' contracts</span>' +
-              '<span style="font-size:0.75rem;font-weight:600;color:' + pnlColor + ';">' + pnlStr + '</span>' +
-              '</div>';
-          }
-          if (e.tags) {
-            var pills = e.tags.split(',').map(function(t) {
-              return '<span style="font-size:0.7rem;background:var(--border);border-radius:20px;padding:0.1rem 0.5rem;margin-right:0.25rem;">' + t.trim() + '</span>';
-            }).join('');
-            header += '<div style="margin-bottom:0.4rem;">' + pills + '</div>';
-          }
-          card.innerHTML = header + '<p style="margin:0;line-height:1.55;">' + e.text + '</p>';
-          entriesEl.appendChild(card);
-        });
-      })
-      .catch(function() {
-        entriesEl.innerHTML = '<p style="color:var(--negative)">Failed to load journal entries.</p>';
-      });
-  }
-
-  function closeJournalDrawer() {
-    var drawer = document.getElementById('journal-drawer');
-    var backdrop = document.getElementById('journal-drawer-backdrop');
-    if (drawer) { drawer.style.transform = 'translateX(100%)'; setTimeout(function() { drawer.style.display = 'none'; }, 300); }
-    if (backdrop) { backdrop.style.display = 'none'; }
-  }
-
-  function openJournalPanel() { /* legacy stub */ }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeJournalDrawer();
-  });
 </script>
 {% endblock %}
