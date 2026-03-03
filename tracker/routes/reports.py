@@ -101,6 +101,8 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
             month_losses = 0
             month_pnl = 0
             month_fees = 0
+            month_winning_pnl = 0
+            month_losing_pnl = 0
 
             for trade in closed_trades:
                 entries = fetch_entries(conn, trade["id"])
@@ -125,8 +127,10 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
                 month_fees += stats["fees"]
                 if stats["pnl_after"] > 0:
                     month_wins += 1
+                    month_winning_pnl += stats["pnl_after"]
                 elif stats["pnl_after"] < 0:
                     month_losses += 1
+                    month_losing_pnl += stats["pnl_after"]
 
                 day_row = daily_rows.setdefault(
                     close_date,
@@ -192,6 +196,8 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
                 "total_fees": month_fees,
                 "daily_avg": daily_avg,
                 "daily_median": daily_median,
+                "winning_pnl": month_winning_pnl,
+                "losing_pnl": month_losing_pnl,
             }
 
         return render_template(
@@ -249,6 +255,8 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
             ytd_losses = 0
             ytd_pnl = 0
             ytd_fees = 0
+            ytd_winning_pnl = 0
+            ytd_losing_pnl = 0
 
             for trade in closed_trades:
                 entries = fetch_entries(conn, trade["id"])
@@ -267,8 +275,10 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
                 ytd_fees += stats["fees"]
                 if stats["pnl_after"] > 0:
                     ytd_wins += 1
+                    ytd_winning_pnl += stats["pnl_after"]
                 elif stats["pnl_after"] < 0:
                     ytd_losses += 1
+                    ytd_losing_pnl += stats["pnl_after"]
 
                 day_row = daily_rows.setdefault(
                     close_date,
@@ -322,6 +332,8 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
                 "total_fees": ytd_fees,
                 "daily_avg": daily_avg,
                 "daily_median": daily_median,
+                "winning_pnl": ytd_winning_pnl,
+                "losing_pnl": ytd_losing_pnl,
             }
 
         return render_template(
