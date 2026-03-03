@@ -26,6 +26,14 @@
         >{{ ytd_stats.total_pnl | money }}</strong
       >
     </div>
+    <div class="kpi-positive">
+      <span>Winning PnL</span>
+      <strong class="positive">{{ ytd_stats.winning_pnl | money }}</strong>
+    </div>
+    <div class="kpi-negative">
+      <span>Losing PnL</span>
+      <strong class="negative">{{ ytd_stats.losing_pnl | money }}</strong>
+    </div>
     <div>
       <span>Total Fees</span>
       <strong
