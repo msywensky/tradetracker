@@ -34,22 +34,22 @@ Flask + SQLite app for tracking options trades, account balances, performance, a
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
+| Variable                  | Default          | Description                                               |
+| ------------------------- | ---------------- | --------------------------------------------------------- |
 | `TRADETRACKER_SECRET_KEY` | `dev-secret-key` | Flask session signing key — **change this in production** |
-| `FLASK_DEBUG` | `1` | Set to `0` to disable the Werkzeug debugger in production |
+| `FLASK_DEBUG`             | `1`              | Set to `0` to disable the Werkzeug debugger in production |
 
 ## Pages
 
-| Page | URL | Description |
-|---|---|---|
-| Trades | `/` | Open trades, today's closes, recent balances, quick balance entry |
-| Accounts | `/accounts` | Account list — add, edit, delete, set default |
-| Trade detail | `/trade/<id>` | Entry log, stats (P&L, fees, % return), close/delete |
-| Monthly | `/month/<year>/<month>` | Calendar view, daily P&L, editable balances |
-| YTD | `/ytd/<year>` | Year-to-date stats by month |
-| Analysis | `/analysis` | Interactive Plotly charts |
-| Journal | `/journal` | Add journal entries, view past entries, link to closed trades |
+| Page         | URL                     | Description                                                       |
+| ------------ | ----------------------- | ----------------------------------------------------------------- |
+| Trades       | `/`                     | Open trades, today's closes, recent balances, quick balance entry |
+| Accounts     | `/accounts`             | Account list — add, edit, delete, set default                     |
+| Trade detail | `/trade/<id>`           | Entry log, stats (P&L, fees, % return), close/delete              |
+| Monthly      | `/month/<year>/<month>` | Calendar view, daily P&L, editable balances                       |
+| YTD          | `/ytd/<year>`           | Year-to-date stats by month                                       |
+| Analysis     | `/analysis`             | Interactive Plotly charts                                         |
+| Journal      | `/journal`              | Add journal entries, view past entries, link to closed trades     |
 
 ## Security
 
@@ -63,11 +63,11 @@ Flask + SQLite app for tracking options trades, account balances, performance, a
 pytest -q
 ```
 
-62 tests, 85 % coverage. The suite covers:
+62 tests passing. The suite covers:
 
 - Route integration (home, accounts, trades, reports, balance)
 - Journal API (add/fetch/filter, validation error paths, trade linking)
-- Analysis chart payloads (`chart1`–`chart4`)
+- Analysis chart payloads (`chart1`–`chart8`)
 - Trade statistics (`compute_trade_stats` — P&L, fees, percent for debit/credit strategies)
 - CSV import utilities and CLI importer
 

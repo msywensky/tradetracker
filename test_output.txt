@@ -1,0 +1,113 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0 -- C:\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\msbas\Documents\projects\tradetracker
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.12.1
+collecting ... collected 62 items
+
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart2_all_losers_yields_zero_win_pct PASSED [  1%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart4_all_accounts_sums_balances PASSED [  3%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart4_null_when_no_balance_data PASSED [  4%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart7_null_when_no_win_loss_pairs PASSED [  6%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart8_excludes_weekend_dates FAILED [  8%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_defaults_to_month_view PASSED [  9%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_invalid_view_falls_back_to_month PASSED [ 11%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_month_view_includes_expected_chart_payloads PASSED [ 12%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_renders_with_empty_database PASSED [ 14%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_ytd_chart3_monthly_pnl_values PASSED [ 16%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_ytd_chart4_balance_trend PASSED [ 17%]
+tests/test_analysis.py::AnalysisRouteTests::test_analysis_ytd_view_daily_and_win_loss_include_prior_month PASSED [ 19%]
+tests/test_analysis.py::AnalysisRouteTests::test_monthly_pnl_comparison_aggregates_all_accounts PASSED [ 20%]
+tests/test_analysis.py::AnalysisRouteTests::test_monthly_pnl_comparison_respects_zero_account_fee PASSED [ 22%]
+tests/test_analysis.py::AnalysisRouteTests::test_save_analysis_preferences_invalid_payload PASSED [ 24%]
+tests/test_analysis.py::AnalysisRouteTests::test_save_analysis_preferences_persisted_across_requests PASSED [ 25%]
+tests/test_analysis.py::AnalysisRouteTests::test_save_analysis_preferences_valid_payload PASSED [ 27%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_clear_trades_and_entries_also_clears_daily_balances PASSED [ 29%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_convert_csv_price_to_x100 PASSED [ 30%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_convert_opts_traded_to_entry_contracts PASSED [ 32%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_detect_csv_kind_for_balance_file PASSED [ 33%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_import_balance_csv PASSED [ 35%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_import_csv_inserts_weekday_and_skips_weekend PASSED [ 37%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_load_trade_rows_finds_header_after_preamble PASSED [ 38%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_load_trade_rows_supports_cp1252_encoding PASSED [ 40%]
+tests/test_import_trades_csv.py::ImportTradesCsvTests::test_prompt_clear_tables_non_interactive_defaults_false PASSED [ 41%]
+tests/test_import_utils.py::ImportUtilsTests::test_infer_symbol_from_notes_defaults_to_unk PASSED [ 43%]
+tests/test_import_utils.py::ImportUtilsTests::test_infer_symbol_from_notes_matches_supported_tickers PASSED [ 45%]
+tests/test_import_utils.py::ImportUtilsTests::test_parse_datetime_with_and_without_year PASSED [ 46%]
+tests/test_import_utils.py::ImportUtilsTests::test_parse_int_and_header_normalization PASSED [ 48%]
+tests/test_import_utils.py::ImportUtilsTests::test_parse_money_supports_currency_and_parentheses PASSED [ 50%]
+tests/test_journal.py::JournalRouteTests::test_add_and_fetch_journal_entry PASSED [ 51%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_accepts_non_json_body PASSED [ 53%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_defaults_date_when_omitted PASSED [ 54%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_linked_to_trade PASSED [ 56%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_rejects_empty_text PASSED [ 58%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_rejects_invalid_date PASSED [ 59%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_rejects_missing_text PASSED [ 61%]
+tests/test_journal.py::JournalRouteTests::test_add_entry_with_title_and_tags PASSED [ 62%]
+tests/test_journal.py::JournalRouteTests::test_closed_trades_today_empty PASSED [ 64%]
+tests/test_journal.py::JournalRouteTests::test_closed_trades_today_excludes_old_closed_trades PASSED [ 66%]
+tests/test_journal.py::JournalRouteTests::test_closed_trades_today_excludes_open_trades PASSED [ 67%]
+tests/test_journal.py::JournalRouteTests::test_closed_trades_today_returns_closed_trade PASSED [ 69%]
+tests/test_journal.py::JournalRouteTests::test_entries_empty_initially PASSED [ 70%]
+tests/test_journal.py::JournalRouteTests::test_entries_for_date_filters_correctly PASSED [ 72%]
+tests/test_journal.py::JournalRouteTests::test_entries_for_date_includes_trade_context PASSED [ 74%]
+tests/test_journal.py::JournalRouteTests::test_entries_for_date_returns_empty_list_when_none PASSED [ 75%]
+tests/test_journal.py::JournalRouteTests::test_entries_returns_multiple PASSED [ 77%]
+tests/test_journal.py::JournalRouteTests::test_journal_page_renders PASSED [ 79%]
+tests/test_journal.py::JournalRouteTests::test_journal_page_shows_closed_trade_today PASSED [ 80%]
+tests/test_journal.py::JournalRouteTests::test_journal_page_shows_existing_entries PASSED [ 82%]
+tests/test_routes.py::RouteIntegrationTests::test_account_create_update_set_default_and_delete PASSED [ 83%]
+tests/test_routes.py::RouteIntegrationTests::test_account_delete_is_blocked_when_trades_exist PASSED [ 85%]
+tests/test_routes.py::RouteIntegrationTests::test_analysis_preferences_saved_to_db PASSED [ 87%]
+tests/test_routes.py::RouteIntegrationTests::test_balance_routes_create_and_update PASSED [ 88%]
+tests/test_routes.py::RouteIntegrationTests::test_close_trade_requires_flat_position_then_closes PASSED [ 90%]
+tests/test_routes.py::RouteIntegrationTests::test_entry_add_update_delete_routes PASSED [ 91%]
+tests/test_routes.py::RouteIntegrationTests::test_get_routes_render_successfully PASSED [ 93%]
+tests/test_routes.py::RouteIntegrationTests::test_save_open_duplicate_and_delete_trade_routes PASSED [ 95%]
+tests/test_routes.py::RouteIntegrationTests::test_trade_create_and_detail PASSED [ 96%]
+tests/test_stats.py::ComputeTradeStatsTests::test_calculates_expected_fields PASSED [ 98%]
+tests/test_stats.py::ComputeTradeStatsTests::test_handles_no_buy_safely PASSED [100%]
+
+================================== FAILURES ===================================
+_______ AnalysisRouteTests.test_analysis_chart8_excludes_weekend_dates ________
+
+self = <test_analysis.AnalysisRouteTests testMethod=test_analysis_chart8_excludes_weekend_dates>
+
+    def test_analysis_chart8_excludes_weekend_dates(self) -> None:
+        """chart8 only tracks MonûFri; weekend trade dates must not affect totals."""
+        account_id = self._insert_account("WKND", 0.0)
+        # 2026-03-01 is a Sunday; should be ignored by chart8
+        self._insert_closed_trade(
+            trade_code="WKND-SUN",
+            account_id=account_id,
+            created_at="2026-03-01 10:00:00",
+            closed_at="2026-03-01",
+            buy_price=100,
+            sell_price=200,
+        )
+        # 2026-03-02 is Monday; should appear in chart8
+        self._insert_closed_trade(
+            trade_code="WKND-MON",
+            account_id=account_id,
+            created_at="2026-03-02 10:00:00",
+            closed_at="2026-03-02",
+            buy_price=100,
+            sell_price=150,
+        )
+    
+        # Query March 2026 month view
+        response = self.client.get(f"/analysis?account={account_id}&view=month")
+        self.assertEqual(response.status_code, 200)
+>       chart8 = self._extract_chart(response.get_data(as_text=True), 8)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_analysis.py:464: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_analysis.py:90: in _extract_chart
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : chart8_data JSON was not found in analysis response
+=========================== short test summary info ===========================
+FAILED tests/test_analysis.py::AnalysisRouteTests::test_analysis_chart8_excludes_weekend_dates
+======================== 1 failed, 61 passed in 7.13s =========================
