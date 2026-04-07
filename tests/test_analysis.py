@@ -439,26 +439,54 @@ class AnalysisRouteTests(unittest.TestCase):
     def test_analysis_chart8_excludes_weekend_dates(self) -> None:
         """chart8 only tracks Mon–Fri; weekend trade dates must not affect totals."""
         account_id = self._insert_account("WKND", 0.0)
-        # 2026-03-01 is a Sunday; should be ignored by chart8
+        
+        today = date.today()
+        # Find first Sunday in current month
+        day_1 = date(today.year, today.month, 1)
+        days_until_sunday = (6 - day_1.weekday()) % 7
+        if days_until_sunday == 0:
+            days_until_sunday = 7
+        sunday_date = day_1 + timedelta(days=days_until_sunday)
+        
+        # Next weekday is Monday
+        monday_date = sunday_date + timedelta(days=1)
+        
+        # Only proceed if both dates are in current month
+        if monday_date.month != today.month:
+            # If we can't find both in current month, use first weekday (should be Mon-Fri)
+            # and adjust by going back to find a weekend
+            monday_date = date(today.year, today.month, 1)
+            # Find first Monday in month
+            while monday_date.weekday() != 0:  # 0 is Monday
+                monday_date += timedelta(days=1)
+            # Use previous Sunday if it's in same month, else next Saturday
+            sunday_date = monday_date - timedelta(days=1)
+            if sunday_date.month != today.month:
+                sunday_date = monday_date + timedelta(days=6)
+        
+        sunday_str = sunday_date.isoformat()
+        monday_str = monday_date.isoformat()
+        
+        # Sunday trade: should be ignored by chart8
         self._insert_closed_trade(
             trade_code="WKND-SUN",
             account_id=account_id,
-            created_at="2026-03-01 10:00:00",
-            closed_at="2026-03-01",
+            created_at=f"{sunday_str} 10:00:00",
+            closed_at=sunday_str,
             buy_price=100,
             sell_price=200,
         )
-        # 2026-03-02 is Monday; should appear in chart8
+        # Monday trade: should appear in chart8
         self._insert_closed_trade(
             trade_code="WKND-MON",
             account_id=account_id,
-            created_at="2026-03-02 10:00:00",
-            closed_at="2026-03-02",
+            created_at=f"{monday_str} 10:00:00",
+            closed_at=monday_str,
             buy_price=100,
             sell_price=150,
         )
 
-        # Query March 2026 month view
+        # Query current month view
         response = self.client.get(f"/analysis?account={account_id}&view=month")
         self.assertEqual(response.status_code, 200)
         chart8 = self._extract_chart(response.get_data(as_text=True), 8)
