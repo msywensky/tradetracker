@@ -5,6 +5,10 @@
   <form class="form-grid create-trade-form" method="post" action="{{ url_for('create_trade') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <label>
+      Date (optional)
+      <input type="date" name="createdDate" />
+    </label>
+    <label>
       Trade ID (optional)
       <input type="text" name="trade_code" placeholder="TRD-20260211-001" />
     </label>

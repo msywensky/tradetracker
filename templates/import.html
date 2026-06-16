@@ -1,0 +1,219 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel home-section">
+  <h2>Import from Screenshot</h2>
+  <p class="muted">Paste a screenshot of your Fidelity order activity (Ctrl/Cmd+V), then review and confirm.</p>
+
+  <div id="paste-zone" tabindex="0" class="paste-zone"
+       style="border:2px dashed var(--border, #888); border-radius:8px; padding:24px; text-align:center; cursor:pointer; outline:none;">
+    <i class="fa-solid fa-paste"></i>
+    <div>Click here and paste an image, or
+      <label style="text-decoration:underline; cursor:pointer;">choose a file
+        <input id="file-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" />
+      </label>
+    </div>
+  </div>
+
+  <div id="preview-image-wrap" style="margin-top:12px; display:none;">
+    <img id="preview-image" alt="pasted screenshot" style="max-width:100%; border-radius:6px;" />
+  </div>
+
+  <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+    <button id="extract-btn" type="button" class="btn-compact" disabled>
+      <i class="fa-solid fa-wand-magic-sparkles btn-icon"></i> Extract Trades
+    </button>
+    <span id="status-msg" class="muted"></span>
+  </div>
+</section>
+
+<section class="panel home-section" id="preview-section" style="display:none;">
+  <h2>Review &amp; Import</h2>
+  <div id="preview-container"></div>
+  <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+    <button id="commit-btn" type="button" class="btn-compact">
+      <i class="fa-solid fa-floppy-disk btn-icon"></i> Confirm Import
+    </button>
+    <span id="commit-msg" class="muted"></span>
+  </div>
+</section>
+
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+const ACCOUNTS = [
+  {% for account in accounts %}
+  { id: {{ account.id }}, short_name: {{ account.short_name | tojson }} },
+  {% endfor %}
+];
+
+let imageB64 = null;
+let imageMediaType = null;
+
+const pasteZone = document.getElementById('paste-zone');
+const fileInput = document.getElementById('file-input');
+const extractBtn = document.getElementById('extract-btn');
+const statusMsg = document.getElementById('status-msg');
+const previewImageWrap = document.getElementById('preview-image-wrap');
+const previewImage = document.getElementById('preview-image');
+const previewSection = document.getElementById('preview-section');
+const previewContainer = document.getElementById('preview-container');
+const commitBtn = document.getElementById('commit-btn');
+const commitMsg = document.getElementById('commit-msg');
+
+function loadBlob(blob) {
+  if (!blob) return;
+  imageMediaType = blob.type;
+  const reader = new FileReader();
+  reader.onload = function () {
+    const dataUrl = reader.result;
+    imageB64 = String(dataUrl).split(',')[1];
+    previewImage.src = dataUrl;
+    previewImageWrap.style.display = 'block';
+    extractBtn.disabled = false;
+    statusMsg.textContent = 'Image ready. Click Extract Trades.';
+  };
+  reader.readAsDataURL(blob);
+}
+
+pasteZone.addEventListener('paste', function (e) {
+  const items = (e.clipboardData || window.clipboardData).items;
+  for (const item of items) {
+    if (item.type && item.type.indexOf('image') === 0) {
+      loadBlob(item.getAsFile());
+      e.preventDefault();
+      return;
+    }
+  }
+  statusMsg.textContent = 'No image found in clipboard.';
+});
+pasteZone.addEventListener('click', function () { pasteZone.focus(); });
+fileInput.addEventListener('change', function () { loadBlob(fileInput.files[0]); });
+
+extractBtn.addEventListener('click', async function () {
+  if (!imageB64) return;
+  extractBtn.disabled = true;
+  statusMsg.textContent = 'Extracting with Claude…';
+  try {
+    const res = await fetch('/import/screenshot/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({ image: imageB64, media_type: imageMediaType })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      statusMsg.textContent = 'Error: ' + (data.error || res.statusText);
+      extractBtn.disabled = false;
+      return;
+    }
+    renderPreview(data.trades || []);
+    statusMsg.textContent = data.trades.length + ' trade(s) found.';
+  } catch (err) {
+    statusMsg.textContent = 'Request failed: ' + err;
+  }
+  extractBtn.disabled = false;
+});
+
+function accountOptions(selectedId) {
+  let html = '<option value="">— choose account —</option>';
+  for (const a of ACCOUNTS) {
+    const sel = (selectedId !== null && Number(selectedId) === a.id) ? ' selected' : '';
+    html += '<option value="' + a.id + '"' + sel + '>' + a.short_name + '</option>';
+  }
+  return html;
+}
+
+function renderPreview(trades) {
+  previewContainer.innerHTML = '';
+  if (!trades.length) {
+    previewContainer.innerHTML = '<p class="muted">No qualifying trades found.</p>';
+    previewSection.style.display = 'block';
+    return;
+  }
+  trades.forEach(function (trade, ti) {
+    const card = document.createElement('div');
+    card.className = 'panel';
+    card.style.marginBottom = '12px';
+    card.dataset.tradeIndex = ti;
+
+    const exp = trade.expiration || '—';
+    const strike = (trade.strike !== null && trade.strike !== undefined) ? trade.strike : '—';
+    const badge = trade.status === 'CLOSED'
+      ? '<span style="color:#2e7d32;">CLOSED</span>'
+      : '<span style="color:#b26a00;">OPEN</span>';
+
+    let rows = '';
+    trade.entries.forEach(function (e, ei) {
+      rows += '<tr data-entry-index="' + ei + '">'
+        + '<td><select class="entry-side"><option value="BUY"' + (e.side === 'BUY' ? ' selected' : '') + '>BUY</option>'
+        + '<option value="SELL"' + (e.side === 'SELL' ? ' selected' : '') + '>SELL</option></select></td>'
+        + '<td><input class="entry-contracts" type="number" min="1" value="' + e.contracts + '" style="width:80px;" /></td>'
+        + '<td><input class="entry-price" type="number" min="0.01" step="0.01" value="' + e.price + '" style="width:100px;" /></td>'
+        + '</tr>';
+    });
+
+    card.innerHTML =
+      '<h3>' + trade.symbol + ' ' + trade.option_type + ' ' + strike + ' · exp ' + exp + ' ' + badge + '</h3>'
+      + '<label>Account (matched: ' + (trade.account_label || '—') + ')<br/>'
+      + '<select class="trade-account">' + accountOptions(trade.account_id) + '</select></label>'
+      + '<table style="margin-top:8px;"><thead><tr><th>Side</th><th>Contracts</th><th>Price (per-contract)</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table>';
+
+    // Stash non-editable fields for commit.
+    card._trade = trade;
+    previewContainer.appendChild(card);
+  });
+  previewSection.style.display = 'block';
+}
+
+function collectTrades() {
+  const cards = previewContainer.querySelectorAll('[data-trade-index]');
+  const trades = [];
+  cards.forEach(function (card) {
+    const base = card._trade;
+    const accountSel = card.querySelector('.trade-account');
+    const entries = [];
+    card.querySelectorAll('tbody tr').forEach(function (tr) {
+      entries.push({
+        side: tr.querySelector('.entry-side').value,
+        contracts: parseInt(tr.querySelector('.entry-contracts').value, 10),
+        price: parseFloat(tr.querySelector('.entry-price').value),
+        created_at: base.created_at
+      });
+    });
+    trades.push({
+      symbol: base.symbol,
+      option_type: base.option_type,
+      expiration: base.expiration,
+      strike: base.strike,
+      account_id: accountSel.value ? parseInt(accountSel.value, 10) : null,
+      created_at: base.created_at,
+      entries: entries
+    });
+  });
+  return trades;
+}
+
+commitBtn.addEventListener('click', async function () {
+  const trades = collectTrades();
+  if (!trades.length) { commitMsg.textContent = 'Nothing to import.'; return; }
+  commitBtn.disabled = true;
+  commitMsg.textContent = 'Importing…';
+  try {
+    const res = await fetch('/import/screenshot/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({ trades: trades })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      commitMsg.textContent = 'Error: ' + (data.error || res.statusText);
+      commitBtn.disabled = false;
+      return;
+    }
+    window.location.href = '/';
+  } catch (err) {
+    commitMsg.textContent = 'Request failed: ' + err;
+    commitBtn.disabled = false;
+  }
+});
+</script>
+{% endblock %}
