@@ -23,6 +23,7 @@
         <li><a href="{{ url_for('index') }}"><i class="fa-solid fa-right-left nav-icon"></i> Trades</a></li>
         <li><a href="{{ url_for('journal_page') }}"><i class="fa-solid fa-book-open nav-icon"></i> Journal</a></li>
         <li><a href="{{ url_for('accounts_page') }}"><i class="fa-solid fa-wallet nav-icon"></i> Accounts</a></li>
+        <li><a href="{{ url_for('import_page') }}"><i class="fa-solid fa-image nav-icon"></i> Import</a></li>
         <li><a href="{{ url_for('month_summary', year=month_start.year if month_start else today.year, month=month_start.month if month_start else today.month) }}"><i class="fa-solid fa-calendar-days nav-icon"></i> Monthly</a></li>
         <li><a href="{{ url_for('ytd_summary', year=today.year) }}"><i class="fa-solid fa-chart-line nav-icon"></i> YTD</a></li>
         <li><a href="{{ url_for('analysis') }}"><i class="fa-solid fa-chart-column nav-icon"></i> Analysis</a></li>

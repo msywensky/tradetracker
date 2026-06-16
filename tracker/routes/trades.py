@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from flask import redirect, render_template, request, url_for
 
@@ -47,13 +47,22 @@ def register_trade_routes(
             except ValueError:
                 return redirect(url_for("index"))
 
+        created_date_raw = request.form.get("createdDate", "").strip()
+        created_at = now_iso_dt()
+        if created_date_raw:
+            try:
+                datetime.strptime(created_date_raw, "%Y-%m-%d")
+                created_at = created_date_raw
+            except ValueError:
+                pass
+
         with get_db() as conn:
             conn.execute(
                 """
                 INSERT INTO trades (trade_code, symbol, option_type, status, created_at, account_id, expiration, strike)
                 VALUES (?, ?, ?, 'OPEN', ?, ?, ?, ?)
                 """,
-                (trade_code, symbol, option_type, now_iso_dt(), account_id, expiration, strike),
+                (trade_code, symbol, option_type, created_at, account_id, expiration, strike),
             )
             trade_id = int(conn.execute("SELECT last_insert_rowid()").fetchone()[0])
 
@@ -106,10 +115,19 @@ def register_trade_routes(
         if contracts <= 0 or price <= 0:
             return redirect(url_for("trade_detail", trade_id=trade_id))
 
+        entry_date_raw = request.form.get("entryDate", "").strip()
+        entry_created_at = now_iso_dt()
+        if entry_date_raw:
+            try:
+                datetime.strptime(entry_date_raw, "%Y-%m-%d")
+                entry_created_at = entry_date_raw
+            except ValueError:
+                pass
+
         with get_db() as conn:
             conn.execute(
                 "INSERT INTO entries (trade_id, side, contracts, price, created_at) VALUES (?, ?, ?, ?, ?)",
-                (trade_id, side, contracts, price, now_iso_dt()),
+                (trade_id, side, contracts, price, entry_created_at),
             )
 
         return redirect(url_for("trade_detail", trade_id=trade_id))

@@ -5,6 +5,8 @@ from .home import register_home_routes
 from .reports import register_report_routes
 from .trades import register_trade_routes
 from .journal import register_journal_routes
+from .imports import register_import_routes
+from tracker.services.screenshot_import import build_preview
 
 
 def register_all_routes(
@@ -29,3 +31,11 @@ def register_all_routes(
     )
     register_report_routes(app, get_db, fetch_entries, compute_trade_stats)
     register_journal_routes(app, get_db)
+    register_import_routes(
+        app,
+        get_db,
+        build_preview,
+        now_iso_dt,
+        now_iso_date,
+        generate_trade_code,
+    )

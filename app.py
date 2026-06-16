@@ -7,11 +7,15 @@ from datetime import datetime, date, timedelta
 from pathlib import Path
 import random
 
+from dotenv import load_dotenv
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 
 from tracker.routes import register_all_routes
 from tracker.services.stats import compute_trade_stats
+
+# Load environment variables from a .env file (e.g. ANTHROPIC_API_KEY) before they are read.
+load_dotenv()
 
 APP_ROOT = Path(__file__).parent
 DB_PATH = APP_ROOT / "data.db"
