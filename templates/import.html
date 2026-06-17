@@ -151,7 +151,8 @@ function renderPreview(trades) {
     });
 
     card.innerHTML =
-      '<h3>' + trade.symbol + ' ' + trade.option_type + ' ' + strike + ' · exp ' + exp + ' ' + badge + '</h3>'
+      '<h3><input class="trade-symbol" type="text" value="' + trade.symbol + '" style="width:90px; text-transform:uppercase;" /> '
+      + trade.option_type + ' ' + strike + ' · exp ' + exp + ' ' + badge + '</h3>'
       + '<label>Account (matched: ' + (trade.account_label || '—') + ')<br/>'
       + '<select class="trade-account">' + accountOptions(trade.account_id) + '</select></label>'
       + '<table style="margin-top:8px;"><thead><tr><th>Side</th><th>Contracts</th><th>Price (per-contract)</th></tr></thead>'
@@ -170,6 +171,7 @@ function collectTrades() {
   cards.forEach(function (card) {
     const base = card._trade;
     const accountSel = card.querySelector('.trade-account');
+    const symbolInput = card.querySelector('.trade-symbol');
     const entries = [];
     card.querySelectorAll('tbody tr').forEach(function (tr) {
       entries.push({
@@ -180,7 +182,7 @@ function collectTrades() {
       });
     });
     trades.push({
-      symbol: base.symbol,
+      symbol: (symbolInput.value || base.symbol).trim().toUpperCase(),
       option_type: base.option_type,
       expiration: base.expiration,
       strike: base.strike,

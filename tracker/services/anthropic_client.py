@@ -24,7 +24,7 @@ Extract every qualifying fill into JSON. Apply these rules exactly:
    or anything that is not a filled price.
 
 3. Symbol: the Symbol cell (e.g. "-QQQ260617C734") encodes the contract. Parse it into:
-   - "underlying": the ticker letters (e.g. "QQQ", "TSLA")
+   - "underlying": the ticker letters. Common tickers include "SPY", "QQQ", "MSFT", "NBIS", "TSLA".
    - "expiration": the 6-digit YYMMDD as an ISO date "YYYY-MM-DD" (e.g. 260617 -> "2026-06-17")
    - "option_type": "CALL" if the letter after the date is C, "PUT" if P
    - "strike": the trailing number as a number (e.g. 734, 400)
