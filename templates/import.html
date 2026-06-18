@@ -156,7 +156,9 @@ function renderPreview(trades) {
       + '<label>Account (matched: ' + (trade.account_label || '—') + ')<br/>'
       + '<select class="trade-account">' + accountOptions(trade.account_id) + '</select></label>'
       + '<table style="margin-top:8px;"><thead><tr><th>Side</th><th>Contracts</th><th>Price (per-contract)</th></tr></thead>'
-      + '<tbody>' + rows + '</tbody></table>';
+      + '<tbody>' + rows + '</tbody></table>'
+      + '<label style="display:block; margin-top:8px;">Notes<br/>'
+      + '<textarea class="trade-notes" rows="2" style="width:100%; box-sizing:border-box;"></textarea></label>';
 
     // Stash non-editable fields for commit.
     card._trade = trade;
@@ -172,6 +174,7 @@ function collectTrades() {
     const base = card._trade;
     const accountSel = card.querySelector('.trade-account');
     const symbolInput = card.querySelector('.trade-symbol');
+    const notesInput = card.querySelector('.trade-notes');
     const entries = [];
     card.querySelectorAll('tbody tr').forEach(function (tr) {
       entries.push({
@@ -188,6 +191,7 @@ function collectTrades() {
       strike: base.strike,
       account_id: accountSel.value ? parseInt(accountSel.value, 10) : null,
       created_at: base.created_at,
+      notes: notesInput.value.trim(),
       entries: entries
     });
   });

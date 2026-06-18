@@ -83,6 +83,7 @@ def register_import_routes(
                         strike = None
 
                 expiration = trade.get("expiration") or None
+                notes = str(trade.get("notes") or "").strip()
                 created_at = str(trade.get("created_at") or now_iso_dt())
 
                 valid_entries = []
@@ -110,8 +111,8 @@ def register_import_routes(
 
                 conn.execute(
                     """
-                    INSERT INTO trades (trade_code, symbol, option_type, status, created_at, closed_at, account_id, expiration, strike)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO trades (trade_code, symbol, option_type, status, created_at, closed_at, account_id, expiration, strike, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         generate_trade_code(),
@@ -123,6 +124,7 @@ def register_import_routes(
                         account_id,
                         expiration,
                         strike,
+                        notes or None,
                     ),
                 )
                 trade_id = int(conn.execute("SELECT last_insert_rowid()").fetchone()[0])
