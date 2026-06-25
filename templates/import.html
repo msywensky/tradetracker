@@ -30,6 +30,9 @@
   <h2>Review &amp; Import</h2>
   <div id="preview-container"></div>
   <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+    <button id="add-trade-btn" type="button" class="btn-compact">
+      <i class="fa-solid fa-plus btn-icon"></i> Add Trade Manually
+    </button>
     <button id="commit-btn" type="button" class="btn-compact">
       <i class="fa-solid fa-floppy-disk btn-icon"></i> Confirm Import
     </button>
@@ -56,6 +59,7 @@ const previewImageWrap = document.getElementById('preview-image-wrap');
 const previewImage = document.getElementById('preview-image');
 const previewSection = document.getElementById('preview-section');
 const previewContainer = document.getElementById('preview-container');
+const addTradeBtn = document.getElementById('add-trade-btn');
 const commitBtn = document.getElementById('commit-btn');
 const commitMsg = document.getElementById('commit-msg');
 
@@ -121,77 +125,126 @@ function accountOptions(selectedId) {
   return html;
 }
 
+function entryRowHtml(side, contracts, price) {
+  return '<tr>'
+    + '<td><select class="entry-side"><option value="BUY"' + (side === 'BUY' ? ' selected' : '') + '>BUY</option>'
+    + '<option value="SELL"' + (side === 'SELL' ? ' selected' : '') + '>SELL</option></select></td>'
+    + '<td><input class="entry-contracts" type="number" min="1" value="' + (contracts != null ? contracts : '') + '" style="width:80px;" /></td>'
+    + '<td><input class="entry-price" type="number" min="0.01" step="0.01" value="' + (price != null ? price : '') + '" style="width:100px;" /></td>'
+    + '<td><button type="button" class="entry-remove btn-compact">Remove</button></td>'
+    + '</tr>';
+}
+
+function buildTradeCard(trade) {
+  const card = document.createElement('div');
+  card.className = 'panel';
+  card.style.marginBottom = '12px';
+  card.dataset.tradeIndex = '1';
+
+  const strikeVal = (trade.strike !== null && trade.strike !== undefined) ? trade.strike : '';
+  const expVal = trade.expiration || '';
+  const createdVal = (trade.created_at || '').slice(0, 10);
+  const optType = trade.option_type === 'PUT' ? 'PUT' : 'CALL';
+
+  let rows = '';
+  (trade.entries || []).forEach(function (e) {
+    rows += entryRowHtml(e.side, e.contracts, e.price);
+  });
+
+  card.innerHTML =
+    '<h3><input class="trade-symbol" type="text" value="' + (trade.symbol || '') + '" placeholder="SPY" style="width:90px; text-transform:uppercase;" /></h3>'
+    + '<div class="form-grid" style="margin-top:4px;">'
+    + '<label>Type<br/><select class="trade-option-type"><option value="CALL"' + (optType === 'CALL' ? ' selected' : '') + '>Call</option>'
+    + '<option value="PUT"' + (optType === 'PUT' ? ' selected' : '') + '>Put</option></select></label>'
+    + '<label>Strike<br/><input class="trade-strike" type="number" min="0" step="0.01" value="' + strikeVal + '" /></label>'
+    + '<label>Expiration<br/><input class="trade-expiration" type="date" value="' + expVal + '" /></label>'
+    + '<label>Date<br/><input class="trade-created" type="date" value="' + createdVal + '" /></label>'
+    + '</div>'
+    + '<label>Account' + (trade.account_label ? ' (matched: ' + trade.account_label + ')' : '') + '<br/>'
+    + '<select class="trade-account">' + accountOptions(trade.account_id) + '</select></label>'
+    + '<table style="margin-top:8px;"><thead><tr><th>Side</th><th>Contracts</th><th>Price (per-contract)</th><th></th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>'
+    + '<button type="button" class="entry-add btn-compact" style="margin-top:8px;"><i class="fa-solid fa-plus btn-icon"></i> Add entry row</button>'
+    + '<label style="display:block; margin-top:8px;">Notes<br/>'
+    + '<textarea class="trade-notes" rows="2" style="width:100%; box-sizing:border-box;">' + (trade.notes || '') + '</textarea></label>';
+
+  return card;
+}
+
 function renderPreview(trades) {
   previewContainer.innerHTML = '';
   if (!trades.length) {
-    previewContainer.innerHTML = '<p class="muted">No qualifying trades found.</p>';
+    previewContainer.innerHTML = '<p class="muted">No qualifying trades found. Use “Add Trade Manually” to enter trades yourself.</p>';
     previewSection.style.display = 'block';
     return;
   }
-  trades.forEach(function (trade, ti) {
-    const card = document.createElement('div');
-    card.className = 'panel';
-    card.style.marginBottom = '12px';
-    card.dataset.tradeIndex = ti;
-
-    const exp = trade.expiration || '—';
-    const strike = (trade.strike !== null && trade.strike !== undefined) ? trade.strike : '—';
-    const badge = trade.status === 'CLOSED'
-      ? '<span style="color:#2e7d32;">CLOSED</span>'
-      : '<span style="color:#b26a00;">OPEN</span>';
-
-    let rows = '';
-    trade.entries.forEach(function (e, ei) {
-      rows += '<tr data-entry-index="' + ei + '">'
-        + '<td><select class="entry-side"><option value="BUY"' + (e.side === 'BUY' ? ' selected' : '') + '>BUY</option>'
-        + '<option value="SELL"' + (e.side === 'SELL' ? ' selected' : '') + '>SELL</option></select></td>'
-        + '<td><input class="entry-contracts" type="number" min="1" value="' + e.contracts + '" style="width:80px;" /></td>'
-        + '<td><input class="entry-price" type="number" min="0.01" step="0.01" value="' + e.price + '" style="width:100px;" /></td>'
-        + '</tr>';
-    });
-
-    card.innerHTML =
-      '<h3><input class="trade-symbol" type="text" value="' + trade.symbol + '" style="width:90px; text-transform:uppercase;" /> '
-      + trade.option_type + ' ' + strike + ' · exp ' + exp + ' ' + badge + '</h3>'
-      + '<label>Account (matched: ' + (trade.account_label || '—') + ')<br/>'
-      + '<select class="trade-account">' + accountOptions(trade.account_id) + '</select></label>'
-      + '<table style="margin-top:8px;"><thead><tr><th>Side</th><th>Contracts</th><th>Price (per-contract)</th></tr></thead>'
-      + '<tbody>' + rows + '</tbody></table>'
-      + '<label style="display:block; margin-top:8px;">Notes<br/>'
-      + '<textarea class="trade-notes" rows="2" style="width:100%; box-sizing:border-box;"></textarea></label>';
-
-    // Stash non-editable fields for commit.
-    card._trade = trade;
-    previewContainer.appendChild(card);
+  trades.forEach(function (trade) {
+    previewContainer.appendChild(buildTradeCard(trade));
   });
   previewSection.style.display = 'block';
 }
+
+// Delegated handlers for add/remove entry rows on any card.
+previewContainer.addEventListener('click', function (e) {
+  const addBtn = e.target.closest('.entry-add');
+  if (addBtn) {
+    const tbody = addBtn.closest('.panel').querySelector('tbody');
+    tbody.insertAdjacentHTML('beforeend', entryRowHtml('BUY', '', ''));
+    return;
+  }
+  const removeBtn = e.target.closest('.entry-remove');
+  if (removeBtn) {
+    const tr = removeBtn.closest('tr');
+    if (tr) tr.remove();
+  }
+});
+
+addTradeBtn.addEventListener('click', function () {
+  const card = buildTradeCard({
+    symbol: '', option_type: 'CALL', strike: null, expiration: null,
+    account_id: null, created_at: '', account_label: null,
+    entries: [{ side: 'BUY', contracts: '', price: '' }]
+  });
+  previewContainer.appendChild(card);
+  previewSection.style.display = 'block';
+  card.querySelector('.trade-symbol').focus();
+});
 
 function collectTrades() {
   const cards = previewContainer.querySelectorAll('[data-trade-index]');
   const trades = [];
   cards.forEach(function (card) {
-    const base = card._trade;
+    const symbol = (card.querySelector('.trade-symbol').value || '').trim().toUpperCase();
+    if (!symbol) return;
+
+    const strikeRaw = card.querySelector('.trade-strike').value;
+    const strike = strikeRaw === '' ? null : parseFloat(strikeRaw);
+    const expiration = card.querySelector('.trade-expiration').value || null;
+    const createdRaw = card.querySelector('.trade-created').value;
+    const created_at = createdRaw ? createdRaw + ' 00:00:00' : '';
     const accountSel = card.querySelector('.trade-account');
-    const symbolInput = card.querySelector('.trade-symbol');
-    const notesInput = card.querySelector('.trade-notes');
+
     const entries = [];
     card.querySelectorAll('tbody tr').forEach(function (tr) {
+      const contracts = parseInt(tr.querySelector('.entry-contracts').value, 10);
+      const price = parseFloat(tr.querySelector('.entry-price').value);
+      if (isNaN(contracts) || isNaN(price)) return;
       entries.push({
         side: tr.querySelector('.entry-side').value,
-        contracts: parseInt(tr.querySelector('.entry-contracts').value, 10),
-        price: parseFloat(tr.querySelector('.entry-price').value),
-        created_at: base.created_at
+        contracts: contracts,
+        price: price,
+        created_at: created_at
       });
     });
+
     trades.push({
-      symbol: (symbolInput.value || base.symbol).trim().toUpperCase(),
-      option_type: base.option_type,
-      expiration: base.expiration,
-      strike: base.strike,
+      symbol: symbol,
+      option_type: card.querySelector('.trade-option-type').value,
+      expiration: expiration,
+      strike: (strike != null && isNaN(strike)) ? null : strike,
       account_id: accountSel.value ? parseInt(accountSel.value, 10) : null,
-      created_at: base.created_at,
-      notes: notesInput.value.trim(),
+      created_at: created_at,
+      notes: card.querySelector('.trade-notes').value.trim(),
       entries: entries
     });
   });

@@ -57,8 +57,8 @@ class BuildPreviewTests(unittest.TestCase):
         # Per-share 4.82 -> per-contract 482.0
         sell = next(e for e in qqq["entries"] if e["side"] == "SELL")
         self.assertEqual(sell["price"], 482.0)
-        # Earliest fill timestamp becomes created_at.
-        self.assertEqual(qqq["created_at"], "2026-06-16 13:27:24")
+        # Latest fill timestamp (the closing fill) becomes created_at.
+        self.assertEqual(qqq["created_at"], "2026-06-16 13:51:44")
 
     def test_open_when_net_nonzero(self) -> None:
         fills = [
