@@ -93,7 +93,7 @@ def build_preview(
 
     Each trade groups fills sharing (account, underlying, option_type, expiration, strike).
     Returns a list of trade dicts with an ``entries`` list, a matched ``account_id``, the
-    earliest fill time as ``created_at``, and a computed OPEN/CLOSED ``status``.
+    latest fill time (the closing fill) as ``created_at``, and a computed OPEN/CLOSED ``status``.
     """
     accounts = list(accounts)
     account_short_by_id = {int(a["id"]): a["short_name"] for a in accounts}
@@ -128,8 +128,8 @@ def build_preview(
             order.append(key)
 
         trade = grouped[key]
-        # Keep the earliest fill timestamp as the trade's created_at.
-        if fill["timestamp"] and (trade["created_at"] is None or fill["timestamp"] < trade["created_at"]):
+        # Use the latest fill timestamp (the closing fill) as the trade's created_at.
+        if fill["timestamp"] and (trade["created_at"] is None or fill["timestamp"] > trade["created_at"]):
             trade["created_at"] = fill["timestamp"]
         trade["entries"].append(
             {
