@@ -66,3 +66,16 @@ Each test class creates an isolated `tempfile` SQLite DB, patches `trade_app.DB_
 - No ORM — raw `sqlite3` is intentional
 - No Flask Blueprints — the `register_*_routes` pattern is intentional
 - No `| safe` on user-controlled data in templates — use `| tojson` instead
+
+## Code Exploration
+
+Use `cymbal` CLI for navigation (preferred over grep/glob/read for exploration):
+
+- `cymbal outline <file>` — List symbols in a file
+- `cymbal show <symbol>` — Display a symbol's source code, or a specific file range
+- `cymbal refs <symbol>` — Find references / call sites. Use --file to scope by path
+- `cymbal investigate <symbol>` — source, callers, impact
+- `cymbal context <symbol>` — Bundled view: source + types + calles + imports
+- `cymbal trace <symbol>` — downward call graph. Add --graph for a visual dependency map
+- `cymbal impact <symbol>` — upward call graph. Add --graph for a visual dependency map
+- `cymbal search <query>` — symbol search

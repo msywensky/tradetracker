@@ -96,6 +96,7 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
 
             trade_rows = []
             today_trade_rows = []
+            trades_by_date: dict[str, list[dict]] = {}
             daily_rows: dict[str, dict] = {}
             month_wins = 0
             month_losses = 0
@@ -122,6 +123,21 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
                         "trade": trade,
                         "stats": stats,
                     })
+
+                trade_dt = trade["created_at"] or trade["closed_at"]
+                trades_by_date.setdefault(close_date, []).append({
+                    "trade_code": trade["trade_code"],
+                    "account_short": trade["account_short"] or "Unassigned",
+                    "symbol": trade["symbol"],
+                    "cp": "P" if (trade["option_type"] or "CALL") == "PUT" else "C",
+                    "total_contracts": stats["total_contracts"],
+                    "avg_buy": stats["avg_buy"],
+                    "avg_sell": stats["avg_sell"],
+                    "pnl_before": stats["pnl_before"],
+                    "percent": stats["percent"],
+                    "notes": trade["notes"] or "",
+                    "trade_dt": trade_dt,
+                })
 
                 month_pnl += stats["pnl_after"]
                 month_fees += stats["fees"]
@@ -203,6 +219,7 @@ def register_report_routes(app, get_db, fetch_entries, compute_trade_stats) -> N
         return render_template(
             "month.html",
             today_trade_rows=today_trade_rows,
+            trades_by_date=trades_by_date,
             trade_rows=trade_rows,
             daily_rows=daily_list,
             daily_dict=daily_rows,

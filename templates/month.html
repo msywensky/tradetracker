@@ -519,9 +519,8 @@
 </div>
 
 <section class="panel" id="today-trades">
-  <h2>Today's Trades</h2>
+  <h2 id="today-trades-title">Today's Trades</h2>
   <div class="section-content">
-    {% if today_trade_rows %}
     <table id="month-today-trade-table">
       <thead>
         <tr>
@@ -540,11 +539,12 @@
           <th>Avg Sell</th>
           <th>PnL</th>
           <th>%</th>
+          <th>Note</th>
         </tr>
       </thead>
-      <tbody>
-        {% for row in today_trade_rows %} {% set trade_dt = row.trade.created_at
-        or row.trade.closed_at %}
+      <tbody id="month-today-trade-tbody">
+        {% if today_trade_rows %} {% for row in today_trade_rows %} {% set
+        trade_dt = row.trade.created_at or row.trade.closed_at %}
         <tr
           title="{{ row.trade.notes or 'No comment' }}"
           data-sort-date="{{ trade_dt }}"
@@ -569,15 +569,50 @@
           <td class="{% if row.stats.percent < 0 %}negative{% endif %}">
             {{ row.stats.percent | pct }}
           </td>
+          <td>
+            {% if row.trade.notes %}
+            <button
+              type="button"
+              class="note-view-btn btn-icon-only"
+              data-note="{{ row.trade.notes }}"
+              data-code="{{ row.trade.trade_code }}"
+              title="View note"
+            >
+              <i class="fa-regular fa-note-sticky"></i>
+            </button>
+            {% endif %}
+          </td>
         </tr>
-        {% endfor %}
+        {% endfor %} {% else %}
+        <tr>
+          <td colspan="11" class="empty">No trades to summarize yet.</td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
-    {% else %}
-    <p class="empty">No trades to summarize yet.</p>
-    {% endif %}
   </div>
 </section>
+
+<div id="note-modal-backdrop" class="modal-backdrop is-hidden"></div>
+<div
+  id="note-modal"
+  class="note-modal is-hidden"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="note-modal-header">
+    <h3 id="note-modal-title">Note</h3>
+    <button
+      type="button"
+      id="note-modal-close"
+      class="btn-icon-only"
+      title="Close"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <p id="note-modal-body"></p>
+</div>
 
 <section class="panel" id="trade-summary">
   <button class="section-toggle btn-compact" data-section="trade-summary">
@@ -868,6 +903,8 @@
       });
     })();
 
+    var tradesByDate = {{ trades_by_date | tojson }};
+
     (function setupCalendarDaySummary() {
       var days = document.querySelectorAll(".calendar-day[data-date]");
       var summary = document.getElementById("calendar-day-summary");
@@ -907,6 +944,74 @@
         }
       }
 
+      var MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+      function pct(value) {
+        return (Number(value || 0)).toFixed(2) + "%";
+      }
+
+      function escapeHtml(value) {
+        var div = document.createElement("div");
+        div.textContent = value == null ? "" : String(value);
+        return div.innerHTML;
+      }
+
+      function formatDateCell(dt) {
+        if (dt && dt.length >= 16) {
+          return dt.slice(5, 10) + " " + dt.slice(11, 16);
+        }
+        if (dt && dt.length >= 10) {
+          return dt.slice(5, 10) + " 00:00";
+        }
+        return dt || "";
+      }
+
+      function renderDateTrades(date) {
+        var titleEl = document.getElementById("today-trades-title");
+        var tbody = document.getElementById("month-today-trade-tbody");
+        if (!titleEl || !tbody) {
+          return;
+        }
+        var parts = date.split("-");
+        titleEl.textContent =
+          MONTH_ABBR[Number(parts[1]) - 1] + " " + Number(parts[2]) + "'s Trades";
+
+        var rows = tradesByDate[date] || [];
+        if (!rows.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="11" class="empty">No trades for this date.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows
+          .map(function (r) {
+            var pnlClass = Number(r.pnl_before) < 0 ? " class=\"negative\"" : "";
+            var pctClass = Number(r.percent) < 0 ? " class=\"negative\"" : "";
+            var noteCell = r.notes
+              ? '<button type="button" class="note-view-btn btn-icon-only"' +
+                ' data-note="' + escapeHtml(r.notes) + '"' +
+                ' data-code="' + escapeHtml(r.trade_code) + '"' +
+                ' title="View note"><i class="fa-regular fa-note-sticky"></i></button>'
+              : "";
+            return (
+              '<tr title="' + escapeHtml(r.notes || "No comment") + '"' +
+              ' data-sort-date="' + escapeHtml(r.trade_dt || "") + '">' +
+              "<td>" + escapeHtml(formatDateCell(r.trade_dt)) + "</td>" +
+              "<td>" + escapeHtml(r.trade_code) + "</td>" +
+              "<td>" + escapeHtml(r.account_short) + "</td>" +
+              "<td>" + escapeHtml(r.symbol) + "</td>" +
+              "<td>" + escapeHtml(r.cp) + "</td>" +
+              "<td>" + escapeHtml(r.total_contracts) + "</td>" +
+              "<td>" + money(r.avg_buy) + "</td>" +
+              "<td>" + money(r.avg_sell) + "</td>" +
+              "<td" + pnlClass + ">" + money(r.pnl_before) + "</td>" +
+              "<td" + pctClass + ">" + pct(r.percent) + "</td>" +
+              "<td>" + noteCell + "</td>" +
+              "</tr>"
+            );
+          })
+          .join("");
+      }
+
       days.forEach(function (day) {
         if (day.classList.contains("empty")) {
           return;
@@ -919,6 +1024,7 @@
           day.classList.add("is-selected");
 
           var date = day.getAttribute("data-date") || "";
+          renderDateTrades(date);
           var trades = Number(day.getAttribute("data-trades") || 0);
           var options = Number(day.getAttribute("data-options") || 0);
           var wins = Number(day.getAttribute("data-wins") || 0);
@@ -980,6 +1086,45 @@
               });
           }
         });
+      });
+    })();
+
+    (function setupNoteModal() {
+      var modal = document.getElementById("note-modal");
+      var backdrop = document.getElementById("note-modal-backdrop");
+      var titleEl = document.getElementById("note-modal-title");
+      var bodyEl = document.getElementById("note-modal-body");
+      var closeBtn = document.getElementById("note-modal-close");
+      if (!modal || !backdrop || !titleEl || !bodyEl) {
+        return;
+      }
+
+      function open(code, note) {
+        titleEl.textContent = code ? code + " — Note" : "Note";
+        bodyEl.textContent = note || "No note.";
+        modal.classList.remove("is-hidden");
+        backdrop.classList.remove("is-hidden");
+      }
+
+      function close() {
+        modal.classList.add("is-hidden");
+        backdrop.classList.add("is-hidden");
+      }
+
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".note-view-btn");
+        if (btn) {
+          open(btn.getAttribute("data-code"), btn.getAttribute("data-note"));
+        }
+      });
+      if (closeBtn) {
+        closeBtn.addEventListener("click", close);
+      }
+      backdrop.addEventListener("click", close);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          close();
+        }
       });
     })();
 
